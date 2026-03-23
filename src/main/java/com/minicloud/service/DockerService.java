@@ -19,19 +19,26 @@ public class DockerService {
     private final DockerClient dockerClient;
 
     public DockerService() {
-        DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+        try {
+            DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
 
-        DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
-                .dockerHost(config.getDockerHost())
-                .sslConfig(config.getSSLConfig())
-                .maxConnections(100)
-                .connectionTimeout(Duration.ofSeconds(30))
-                .responseTimeout(Duration.ofSeconds(45))
-                .build();
+            DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                    .dockerHost(config.getDockerHost())
+                    .sslConfig(config.getSSLConfig())
+                    .maxConnections(100)
+                    .connectionTimeout(Duration.ofSeconds(30))
+                    .responseTimeout(Duration.ofSeconds(45))
+                    .build();
 
-        this.dockerClient = DockerClientBuilder.getInstance(config)
-                .withDockerHttpClient(httpClient)
-                .build();
+            this.dockerClient = DockerClientBuilder.getInstance(config)
+                    .withDockerHttpClient(httpClient)
+                    .build();
+            
+            // Validate connection
+            dockerClient.pingCmd().exec();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to Docker daemon. Ensure Docker Desktop is running.", e);
+        }
     }
 
     /**

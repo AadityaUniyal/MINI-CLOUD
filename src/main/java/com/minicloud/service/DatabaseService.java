@@ -16,14 +16,23 @@ public class DatabaseService {
     public DatabaseService(DockerService dockerService, DatabaseInstanceRepository databaseInstanceRepository) {
         this.dockerService = dockerService;
         this.databaseInstanceRepository = databaseInstanceRepository;
+        initializeNextPort();
+    }
+
+    private void initializeNextPort() {
+        databaseInstanceRepository.findAll().stream()
+                .mapToInt(DatabaseInstance::getHostPort)
+                .max()
+                .ifPresent(maxPort -> NEXT_PORT = maxPort + 1);
     }
 
     /**
      * Week 2 Core: Provision a MySQL container and track it in H2.
      */
     public DatabaseInstance provisionDatabase(String owner, String name, String dbName, String rootPassword) {
-        int hostPort = NEXT_PORT++;
-        String containerId = dockerService.launchMysqlInstance(name, dbName, rootPassword, hostPort);
+        synchronized (this) {
+            int hostPort = NEXT_PORT++;
+            String containerId = dockerService.launchMysqlInstance(name, dbName, rootPassword, hostPort);
 
         DatabaseInstance instance = DatabaseInstance.builder()
                 .name(name)
@@ -36,7 +45,8 @@ public class DatabaseService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return databaseInstanceRepository.save(instance);
+            return databaseInstanceRepository.save(instance);
+        }
     }
 
     public List<DatabaseInstance> getAllDatabases() {
