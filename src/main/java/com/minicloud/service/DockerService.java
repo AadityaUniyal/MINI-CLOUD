@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Statistics;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -12,6 +13,7 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.io.IOException;
 
 @Service
 public class DockerService {
@@ -96,5 +98,25 @@ public class DockerService {
 
     public void restartContainer(String containerId) {
         dockerClient.restartContainerCmd(containerId).exec();
+    }
+
+    public Statistics getContainerStats(String containerId) {
+        try {
+            final Statistics[] statsHolder = new Statistics[1];
+            dockerClient.statsCmd(containerId).withNoStream(true).exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<Statistics>() {
+                @Override
+                public void onNext(Statistics stats) {
+                    statsHolder[0] = stats;
+                    try {
+                        close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+            }).awaitCompletion(5, java.util.concurrent.TimeUnit.SECONDS);
+            return statsHolder[0];
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
