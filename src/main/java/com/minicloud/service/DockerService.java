@@ -78,4 +78,16 @@ public class DockerService {
     public void removeContainer(String containerId) {
         dockerClient.removeContainerCmd(containerId).exec();
     }
+
+    public String getContainerStatus(String containerId) {
+        try {
+            return dockerClient.inspectContainerCmd(containerId).exec().getState().getStatus();
+        } catch (Exception e) {
+            return "UNKNOWN";
+        }
+    }
+
+    public void restartContainer(String containerId) {
+        dockerClient.restartContainerCmd(containerId).exec();
+    }
 }

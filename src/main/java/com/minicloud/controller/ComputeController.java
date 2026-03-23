@@ -1,7 +1,7 @@
 package com.minicloud.controller;
 
-import com.minicloud.dto.LaunchResponse;
-import com.minicloud.service.DockerService;
+import com.minicloud.model.ComputeInstance;
+import com.minicloud.service.ComputeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,18 +9,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/compute")
 public class ComputeController {
 
-    private final DockerService dockerService;
+    private final ComputeService computeService;
 
-    public ComputeController(DockerService dockerService) {
-        this.dockerService = dockerService;
+    public ComputeController(ComputeService computeService) {
+        this.computeService = computeService;
     }
 
     @PostMapping("/launch")
-    public ResponseEntity<LaunchResponse> launchInstance() {
-        String instanceId = dockerService.launchTomcatContainer();
-        return ResponseEntity.ok(LaunchResponse.builder()
-                .instanceId(instanceId)
-                .status("RUNNING")
-                .build());
+    public ResponseEntity<ComputeInstance> launchInstance(@RequestParam String name) {
+        // In a real app, user details would be taken from the SecurityContext
+        ComputeInstance instance = computeService.launchInstance("admin", name);
+        return ResponseEntity.ok(instance);
     }
 }
