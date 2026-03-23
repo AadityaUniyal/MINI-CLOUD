@@ -1,44 +1,70 @@
 # ☁️ MiniCloud — Java-Based Cloud Infrastructure Platform
 
-> A simplified, locally-running cloud platform that simulates core AWS services — built entirely with a **Pure Java** tech stack as a semester PBL project.
+> A simplified, locally-running cloud platform that provides core infrastructure services — built entirely with a **Pure Java** tech stack as a professional Project-Based Learning initiative.
 
 ---
 
 ## 📌 Problem Statement
 
-Modern cloud platforms (AWS, GCP, Azure) are powerful but opaque and expensive for students and small teams. **MiniCloud** is a desktop cloud console that exposes the same core cloud primitives — Compute, Storage, Databases, Load Balancing, and IAM — using nothing but Java, Docker, and a modern Spring Boot backend. The goal is to make cloud infrastructure tangible, scriptable, and locally deployable.
+Modern cloud environments are powerful but often complex for developmental learning and local simulation. **MiniCloud** is a unified cloud console that exposes essential infrastructure primitives — Compute, Storage, Databases, Load Balancing, and Identity Management — using nothing but Java, Docker, and a modern Spring Boot backend. It provides a local "Private Cloud" experience for developers to host, scale, and monitor web services.
 
 ---
 
-## 🚀 Core Services
+## 🚀 Core Infrastructure Services
 
-| Service | AWS Equivalent | Technology |
-|---|---|---|
-| **Compute** | EC2 | Docker + docker‑java API |
-| **Object Storage** | S3 | Java NIO (`java.nio.file`) |
-| **Managed Database** | RDS | Docker (MySQL containers) |
-| **Load Balancer** | ELB | Spring Cloud Gateway / Java Reverse Proxy |
-| **IAM & Auth** | IAM + Cognito | Spring Security + JWT |
-| **Monitoring & Billing** | CloudWatch + Cost Explorer | Docker Stats API + `@Scheduled` |
+| Service | Category | Functionality | Technology |
+|---|---|---|---|
+| **Compute** | Virtual Server | Host Tomcat web servers and custom applications | Docker Engine |
+| **Object Storage** | Data Backup | Store files, assets, and media in buckets | Java NIO (`java.nio.file`) |
+| **Managed Database** | DB Engine | Provision secure MySQL instances with dynamic ports | Docker (MySQL) |
+| **Load Balancer** | Traffic Mgmt | Distribute incoming traffic across multiple servers | Round Robin Algorithm |
+| **IAM & Auth** | Identity | Secure user access with JWT-based sessions | Spring Security |
+| **Health Check** | Reliability | Automated monitoring and self-healing engine | Background Polling |
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture & Workflow
 
+### Architectural Flowchart
+```mermaid
+graph TD
+    User((User / Frontend)) -->|REST + JWT| API[Spring Boot REST API]
+    API -->|Auth| Security[Spring Security & JWT]
+    Security -->|Authorized| Controller{Controllers}
+    
+    Controller -->|Launch| Compute[Compute Service]
+    Controller -->|Provision| DB[Database Service]
+    Controller -->|Upload| Storage[Bucket Service]
+    
+    Compute -->|Docker Java API| Docker[(Docker Engine)]
+    DB -->|Docker Java API| Docker
+    Storage -->|Java NIO| Disk[Local Storage Registry]
+    
+    subgraph Reliability Engine
+        Health[Health Check Service] -->|Poll Status| Docker
+        Health -->|Auto-Heal| Docker
+    end
+    
+    subgraph Persistence Layer
+        H2[(Embedded H2 Database)] --- API
+    end
 ```
-JavaFX Desktop App (Frontend)
-        │
-        │  REST API (JSON + JWT)
-        ▼
-Spring Boot 3.x Backend
-   ├── AuthController      → AuthService       → H2 Database (JPA)
-   ├── ComputeController   → DockerService      → Docker Daemon (containers)
-   ├── StorageController   → BucketService      → Local File System (NIO)
-   ├── DatabaseController  → DatabaseService    → Docker Daemon (MySQL)
-   ├── LoadBalancerController → LoadBalancerService → Spring Cloud Gateway
-   ├── StatsController     → StatsService       → Docker Stats API
-   └── OrchestrationController → OrchestrationService → All of the above
-```
+
+### Detailed Execution Flow
+- **Request Layer**: Users interact via a JavaFX Dashboard, sending JSON requests with Bearer tokens.
+- **Service Layer**: Decoupled business logic handles resource allocation, orchestration, and naming.
+- **Infrastructure Layer**: Utilizes the high-level `docker-java` library to communicate with the local Docker daemon.
+- **Reliability Layer**: A dedicated Background Worker (`HealthCheckService`) monitors container health every 10 seconds, performing automatic restarts if an instance crashes.
+
+## 🌐 Cloud Hosting Capabilities
+
+MiniCloud is specifically designed to facilitate the hosting and management of complex web applications:
+
+1. **Web Server Hosting**: Instantly launch and manage Tomcat-based application servers for Java web applications.
+2. **Database Provisioning**: Create isolated database backends with pre-configured credentials and schema support.
+3. **Asset Storage**: Store user-uploaded content, static assets (images/videos), and backups via a robust object storage registry.
+4. **Traffic Scaling**: Utilize the Load Balancer to scale horizontally by distributing user traffic across multiple server instances.
+5. **Operational Monitoring**: Track real-time performance metrics (CPU/RAM) and rely on the auto-healing engine for 24/7 service availability.
 
 ---
 
