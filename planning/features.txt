@@ -1,0 +1,37 @@
+MINICLOUD - PURE JAVA CORE FEATURES
+
+MiniCloud is a simplified, yet highly advanced cloud infrastructure platform built entirely using a Java tech stack. It simulates the core services of a major cloud provider (like AWS) but runs locally as a desktop application.
+
+1. COMPUTE SERVICE (EC2-like)
+- Provision Virtual Machines: Spin up new instances (Apache Tomcat containers) on demand.
+- Instance Lifecycles: Start, Stop, and Terminate instances instantly.
+- Pre-defined Instance Types: Select from different sizes (e.g., t1.micro, t2.small) which map to container memory and CPU limits.
+- Powered By: Docker Java API, navigating the host Docker daemon directly from the Java backend.
+
+2. STORAGE SERVICE (S3-like)
+- Object Storage: Create logical "Buckets" and upload files to them.
+- File Management: Upload, download, and delete files using a modern, drag-and-drop interface.
+- Powered By: Java NIO (Non-blocking I/O) mapping logical buckets to structured physical directories on the local file system.
+
+3. DATABASE SERVICE (RDS-like)
+- Automated DB Provisioning: 1-click launch of isolated relational database instances (MySQL or PostgreSQL).
+- Connection Management: Automatically generates and provides JDBC connection strings and credentials for the user to use externally.
+- Powered By: Docker Java API orchestrating dedicated database containers.
+
+4. LOAD BALANCER SERVICE (ELB-like)
+- Traffic Distribution: Group multiple Compute instances together under a "Target Group".
+- Reverse Proxy: A dedicated load balancer endpoint routes incoming HTTP traffic to the underlying instances using a Round-Robin algorithm.
+- Powered By: Spring Cloud Gateway or a dynamic Pure Java Reverse Proxy.
+
+5. IDENTITY & ACCESS MANAGEMENT (IAM)
+- Secure Access: User registration and login protected by JWT (JSON Web Tokens).
+- Roles: Role-based access control (Admin vs. Standard User).
+- Quota Enforcement: Hard limits on how many instances, databases, or GB of storage a user can spawn.
+
+6. REAL-TIME MONITORING & BILLING
+- Live Metrics: Polling Docker stats to display real-time CPU and Memory usage via interactive JavaFX UI charts.
+- Simulated Billing: An hourly cost calculation engine that bills the user based on the uptime of their provisioned resources.
+
+7. MODERN DESKTOP CONSOLE
+- Premium UI: A hardware-accelerated, dark-mode desktop console.
+- Interactive: Built entirely with JavaFX, featuring dynamic tables, modal dialogs, and real-time updates.

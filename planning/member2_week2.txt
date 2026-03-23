@@ -1,0 +1,29 @@
+WEEK 2 AIM: Storage & Database APIs (The Bridge)
+
+ROLE: You are the "Bridge". Your job is to take the complex Docker and NIO logic from Member 1 and expose it as clean, secure REST APIs for Member 3.
+
+---
+
+STEP 1: STORAGE CONTROLLERS
+- Dependency: Member 1's `StorageService`.
+- Implement `StorageController`:
+  - `POST /api/storage/upload`: Accepts `MultipartFile`. Calls `storageService.saveFile()`.
+  - `GET /api/storage/list`: Returns a JSON list of files for the logged-in user.
+  - `GET /api/storage/download/{fileName}`: Streams the file back to the client.
+- *Tip*: Use `ResponseEntity<Resource>` for downloads.
+
+STEP 2: DATABASE PROVISIONING CONTROLLERS
+- Dependency: Member 1's `DatabaseService`.
+- Implement `DatabaseController`:
+  - `POST /api/database/provision`: Accepts JSON `{"dbName": "my_db", "password": "123"}`. Calls `databaseService.launchMysqlInstance()`.
+  - `GET /api/database/instances`: Returns a list of the user's running MySQL containers and their JDBC strings.
+- Construct JDBC String: `jdbc:mysql://localhost:{port}/{dbName}`.
+
+STEP 3: SECURITY & VALIDATION
+- Ensure all storage and database endpoints are protected with `@PreAuthorize("isAuthenticated()")`.
+- Crucial: Filters searches so User A cannot see User B's files or databases.
+
+END OF WEEK 2 CHECKLIST FOR MEMBER 2:
+[ ] Postman can successfully upload a file to the backend.
+[ ] Postman can trigger a MySQL launch and receive a valid JDBC connection string.
+[ ] API returns 403 Forbidden if a JWT is missing or invalid.

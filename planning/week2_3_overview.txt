@@ -1,0 +1,46 @@
+# MiniCloud: Deep-Dive Roadmap for Weeks 2 & 3 (The "Website Hosting" Mission)
+
+**FINAL AIM:** To transition MiniCloud from a set of isolated services into a cohesive, automated platform capable of hosting production-ready websites. By the end of Week 3, a user should be able to deploy a "Web Stack" (Frontend + Backend + Database + Load Balancer) as easily as they would on AWS.
+
+---
+
+## 🎯 WEEK 2: THE CORE STACK & DYNAMIC ROUTING (70% MILESTONE)
+The mission for Week 2 is to achieve full service integration. By Sunday, the "Big Four" AWS-equivalent services must be functional and talking to each other.
+
+### 1. Compute (EC2) & Storage (S3) Integration
+-   **The Goal**: Host static assets and web applications.
+-   **Deep Dive**: We use **Java NIO** to create a structured "Bucket" system (`./cloud_storage/{userId}/{bucketName}`). This allows users to upload their site's `index.html`, `CSS`, and `Images`. The Compute engine (Tomcat containers) will be configured to serve these files, simulating a real-world web server deployment.
+
+### 2. Managed Database Service (RDS)
+-   **The Goal**: Zero-config database provisioning.
+-   **Deep Dive**: We orchestrate **Stateful MySQL Containers**. The backend handles the "heavy lifting": pulling images, mounting persistent volumes (so data survives restarts), and generating secure JDBC strings. This allows the hosted website to have a persistent backend immediately.
+
+### 3. Load Balancer & Traffic Routing (ELB)
+-   **The Goal**: Elastic traffic distribution.
+-   **Deep Dive**: We implement a **Dynamic Reverse Proxy** using Spring Cloud Gateway logic. It maps a single "Public Entry Point" to multiple "Private Compute Nodes." Using a **Round-Robin algorithm**, we ensure that if a user hosts a high-traffic site, the load is spread across all available containers.
+
+---
+
+## 🎯 WEEK 3: AWS-LIKE AUTOMATION & SYSTEM RESILIENCE
+Now that the stack is functional, Week 3 is about making it "Smart" and "Reliable." We are building features that define professional cloud providers.
+
+### 4. System Health & "Auto-Healing" (The AWS Experience)
+-   **The Goal**: 99.9% Uptime Simulation.
+-   **Deep Dive**: We will build a **Background Health Daemon**. It polls the Docker daemon every few seconds. If a web server container crashes (e.g., due to a code bug in the hosted site), the MiniCloud "Healer" will automatically trigger a container restart, ensuring the website stays online without manual intervention.
+
+### 5. "One-Click Deploy" (AWS Amplify/Beanstalk-like)
+-   **The Goal**: Absolute simplicity for the user.
+-   **Deep Dive**: We are building an **Orchestration Engine**. Instead of the user creating each piece manually, they will use a "Website Wizard." This wizard calls a single "Stack API" that:
+    1.  Provisions the Tomcat Container.
+    2.  Sets up the MySQL Database.
+    3.  Links them via environment variables.
+    4.  Attaches a Load Balancer.
+    5.  Provides the user with a single URL to access their live site.
+
+### 6. Live Metrics & Operational Visibility
+-   **The Goal**: Real-time transparency.
+-   **Deep Dive**: Through **Docker Stats Streaming**, we will show live CPU/RAM usage of the hosted website. If the site is under heavy load, the user will see the spikes in real-time on their JavaFX dashboard.
+
+---
+
+**TEAM VISION:** We are not just coding; we are building an infrastructure. Let's make MiniCloud the fastest and most reliable way to host a Java-based website!

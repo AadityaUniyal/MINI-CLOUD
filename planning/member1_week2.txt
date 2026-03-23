@@ -1,0 +1,34 @@
+WEEK 2 AIM: Storage Service & Managed Databases (The Data Layer)
+
+ROLE: You are deep in the "Engine Room". This week you move from simple Tomcat containers to persistent file storage and stateful MySQL databases.
+
+---
+
+STEP 1: REFINED DOCKER LOGIC (MYSQL)
+- Update `DockerService` to support MySQL.
+- Method: `public String launchMysqlInstance(String dbName, String rootPassword)`
+- Implementation:
+  - Pull `mysql:8.0` image.
+  - Set Environment Variables: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`.
+  - Port Mapping: Map a dynamic host port (e.g., use a counter or find an open port starting from 33061) to `3306` inside the container.
+- *Dependency checkpoint*: Member 2 needs this method to return the host port so they can construct the JDBC string for the user.
+
+STEP 2: STORAGE ENGINE (JAVA NIO)
+- Create `StorageService` or `BucketService`.
+- Use `java.nio.file.Path` and `Files`.
+- Create a base storage directory: `./cloud_storage`.
+- Logic:
+  - `saveFile(String userId, String bucketName, String fileName, InputStream data)`: Writes input stream to `${basePath}/${userId}/${bucketName}/${fileName}`.
+  - `listFiles(String userId, String bucketName)`: Returns a list of file metadata (name, size, date).
+  - `getFile(String userId, String bucketName, String fileName)`: Returns a `Resource` or `Path` for download.
+
+STEP 3: PERSISTENCE (H2 TRACKING)
+- Create `StorageFile` and `DatabaseInstance` JPA Entities.
+- DatabaseInstance fields: `id`, `ownerId`, `containerId`, `dbName`, `hostPort`, `status`.
+- StorageFile fields: `id`, `ownerId`, `bucketName`, `fileName`, `sizeBytes`.
+- *Why?* Member 2 needs to query these from the DB to show the user's "Active Resources".
+
+END OF WEEK 2 CHECKLIST FOR MEMBER 1:
+[ ] `launchMysqlInstance` successfully creates a running MySQL container with a password.
+[ ] Files uploaded via the service appear in the project's `./cloud_storage` folder.
+[ ] Database instances are correctly tracked in the H2 `DatabaseInstance` table.

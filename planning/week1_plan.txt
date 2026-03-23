@@ -1,0 +1,46 @@
+WEEK 1: HIGH-SPEED FOUNDATION & COMPUTE ENGINE
+
+Goal for Week 1: Establish the base infrastructure (Spring Boot + JavaFX), secure the system with IAM/JWT, and prove that our Java app can successfully command the Docker daemon to launch a live container via the UI.
+
+---
+
+1. TEAM PROCESS FLOW FOR WEEK 1
+
+How the team will work synchronously to build the first functional loop:
+
+Step A: Database & Security (Member 1)
+Member 1 starts by initializing the Spring Boot project and hooking up the H2 database. They create the `User` table and set up Spring Security so that the system is protected and requires a JWT token to execute API calls.
+
+Step B: API Contracts & Endpoints (Member 2)
+While Member 1 configures the DB and Security, Member 2 builds the `AuthController` (for login/registration) and a bare-bones `ComputeController`. Member 2 agrees with Member 3 (Frontend) on the exact JSON formats for the API (e.g., {"token": "abc...", "status": "success"}).
+
+Step C: Frontend UI & Linking (Member 3)
+Member 3 creates the JavaFX application and basic scenes using SceneBuilder. They build the "Login" screen. Once Member 2 finishes the auth API and Member 1 finishes the Auth logic, Member 3 connects the JavaFX "Login" button to the `/api/auth/login` endpoint using Java's built-in `HttpClient`.
+
+Step D: The Compute Breakthrough (All Members)
+Member 1 integrates the `docker-java` library and writes a backend service capable of starting a basic Tomcat container. Member 2 links this service to the `/api/compute/launch` endpoint. Member 3 builds a "Launch Instance" button on the Desktop Dashboard. 
+*The Process Loop*: When Member 3 clicks it in the UI -> Member 2's API validates the JWT -> Member 2 calls Member 1's Docker service -> A Docker container spins up on the host machine. Week 1 is a massive success!
+
+---
+
+2. IN-DEPTH ASSIGNMENTS
+
+MEMBER 1: Database & Core Architecture
+Your job is the "engine room".
+- Initialize Spring Boot: Use Spring Initializr (Web, JPA, H2, Security, Lombok).
+- H2 Configuration: Set up `application.properties` so the DB saves to a local file (e.g., `jdbc:h2:file:./data/minicloud`). This ensures data survives application restarts.
+- Security Integration: Implement standard JWT authentication. Write a `JwtUtil` class to generate tokens.
+- Docker Integration: Add the `docker-java` dependency. Write a `DockerService` class that connects to the host Docker socket (e.g., `tcp://localhost:2375` or Unix socket). Write a core method: `launchTomcatContainer()`. Test that this method works independently.
+
+MEMBER 2: API Handling
+Your job is the "bridge" between the engine room and the user interface.
+- Auth Controller: Build `POST /api/auth/login` and `POST /api/auth/register`. These will accept JSON like `{"username": "admin", "password": "123"}` and return a JWT string.
+- Compute Controller: Build `POST /api/compute/launch`. This endpoint will be protected by your security config. When called, it validates the request, then directly calls Member 1's `DockerService.launchTomcatContainer()`.
+- API Testing: You are strictly responsible for testing these APIs using Postman to ensure they work perfectly before handing them off to Member 3.
+
+MEMBER 3: Frontend Lead
+Your job is the "face" of the application.
+- JavaFX Setup: Initialize a JavaFX project (Java 17+ recommended). Create a base window bounds layout.
+- Login Scene: Design a clean FXML file with a Username text field, Password field, and a massive "Login" button.
+- HTTP Connection: Write a Java class `BackendClient` that uses `java.net.http.HttpClient`. In the button's action event, send a POST request with the user's credentials to `http://localhost:8080/api/auth/login`. Extract the JWT token from the response and save it in a static variable cache.
+- Basic Dashboard: Design the main screen that the user sees after logging in. It should have a sidebar for navigation, and a main area with a "Launch Instance" button that triggers the compute API, passing the cached JWT in the Authorization Header.

@@ -1,0 +1,37 @@
+WEEK 2: STORAGE SERVICE & DATABASE SERVICE
+
+Goal for Week 2: Implement the "Data" layer of MiniCloud. This includes a simulated S3-like storage service using Java NIO and a managed database service that spins up real MySQL containers on demand.
+
+---
+
+1. TEAM PROCESS FLOW FOR WEEK 2
+
+Step A: Storage & Database Engine (Member 1)
+Member 1 implements the backend logic for file storage using Java NIO. They also extend the Docker service to support MySQL instances with custom environment variables (ROOT_PASSWORD).
+
+Step B: API Development (Member 2)
+Member 2 builds the REST controllers for Storage (upload/download/list) and Databases (provision/list). They handle the multipart file uploads from the frontend.
+
+Step C: UI Implementation (Member 3)
+Member 3 builds two new major tabs in the JavaFX Dashboard: "Storage" and "Databases". They implement a file explorer view for storage and a list view for active database instances.
+
+Step D: Integrated Data Flow (All Members)
+The team ensures that a user can upload a file via the UI -> goes to Member 2's API -> saved by Member 1's service. Similarly, clicking "Provision MySQL" spins up a container and returns a JDBC string to the UI.
+
+---
+
+2. IN-DEPTH ASSIGNMENTS
+
+MEMBER 1: Storage & Database Logic
+- BucketService: Use Java NIO (java.nio.file) to simulate cloud buckets. Create methods to list files, upload (save), and download (retrieve) files from a specific local directory (e.g., ./storage/user_id/bucket_name).
+- Database Service: Extend DockerService to launch mysql:latest. Crucial: Use Docker-Java to set MYSQL_ROOT_PASSWORD and map a random host port to 3306. Create a DatabaseInstance entity in H2 to track these.
+
+MEMBER 2: Storage & Database APIs
+- StorageController: Implement POST /api/storage/upload (Multipart), GET /api/storage/files, and GET /api/storage/download/{filename}.
+- DatabaseController: Implement POST /api/database/provision (calls Member 1's service) and GET /api/databases (returns a list of connection strings and statuses).
+- Validation: Ensure users can only see their own files and databases.
+
+MEMBER 3: UI Design & Integration
+- Storage Browser: Create a "Storage" tab with a table/list view. Add an "Upload" button that opens a FileChooser. Wire the "Download" button to save files locally.
+- Database Tab: Create a "Databases" tab. Add a "+ Create Database" button and a card-based list showing active databases with their JDBC connection strings (e.g., jdbc:mysql://localhost:33061/db).
+- Visual Feedback: Add progress bars for uploads and "Provisioning..." spinners for databases.

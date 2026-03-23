@@ -1,0 +1,47 @@
+WEEK 1 AIM: High-Speed Foundation & Compute Engine (Frontend Lead)
+
+ROLE: You are the "Face" of MiniCloud. Your primary goal this week is to build the Desktop App visuals using JavaFX and wire the UI buttons so they successfully send HTTP requests to Member 2's APIs.
+
+---
+
+STEP 1: INITIALIZE THE JAVAFX PROJECT
+- Create a new Maven/Gradle project specifically for the Frontend.
+- Add OpenJFX dependencies (Controls, FXML, Graphics).
+- Set up your main `App.java` class that extends `javafx.application.Application`.
+- Ensure Java Modules (`module-info.java`) are configured correctly if using Java 17+.
+
+STEP 2: DESIGN THE LOGIN SCENE (UI)
+- Open SceneBuilder (or code FXML by hand).
+- Create `Login.fxml`.
+- Design a premium, modern login screen.
+  - Use a sleek Dark Mode aesthetic using CSS (e.g., `#2b2b2b` backgrounds).
+  - Add text fields for Username and Password.
+  - Add a large, prominent "Login" button.
+
+STEP 3: WIRE THE LOGIN BUTTON (HTTP CLIENT)
+- Create a `LoginController.java` to back your FXML file.
+- Write a utility class (e.g., `BackendClient.java`) that uses Java 11's `java.net.http.HttpClient` to make asynchronous REST calls.
+- When the user clicks "Login":
+  1. Grab the text from the Username/Password fields.
+  2. Build a JSON string: `{"username": "...", "password": "..."}`.
+  3. Send a POST request to Member 2's endpoint: `http://localhost:8080/api/auth/login`.
+  4. Parse the JSON response. If successful, extract the `token` string.
+  5. Save this token in a static variable (e.g., `SessionManager.jwtToken = ...`) so it can be used on other screens.
+  6. Transition the scene to the Main Dashboard.
+
+STEP 4: DESIGN THE COMPUTE DASHBOARD & LAUNCH TRIGGER
+- Create `Dashboard.fxml`.
+- Design a sidebar with navigation (Compute, Storage, Databases).
+- In the main central area, add a large "Launch Instance" button.
+- Create `DashboardController.java`.
+- When the user clicks "Launch Instance":
+  1. Retrieve the saved JWT token from `SessionManager`.
+  2. Use your `BackendClient` to send a POST request to `http://localhost:8080/api/compute/launch`.
+  3. *CRITICAL*: You must include the header `Authorization: Bearer <your_saved_token>`.
+  4. Wait for the response. If successful, pop up a JavaFX `Alert` dialog saying "Instance Launched Successfully!"
+
+END OF WEEK 1 CHECKLIST FOR MEMBER 3:
+[ ] JavaFX application launches successfully.
+[ ] Login UI looks modern and styled with CSS.
+[ ] Clicking Login successfully calls the Backend API and transitions scenes.
+[ ] Clicking Launch Instance successfully calls the Compute API with the HTTP Authorization header attached.

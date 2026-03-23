@@ -1,0 +1,38 @@
+WEEK 2 & 3 AIM: Accelerated Data Layer & Auto-Healing Infrastructure
+
+ROLE: You are the "Hardware Lead." Your mission is to build a rock-solid foundation that not only hosts data but also automatically recovers from failures.
+
+---
+
+WEEK 2: THE DATA LAYER & DOCKER MASTERY
+
+STEP 1: REFINED DOCKER LOGIC (MYSQL)
+- Implement `public String launchMysqlInstance(String dbName, String rootPassword)`.
+- Features: `mysql:8.0` image, persistent volume mounting (for database data), and dynamic port mapping.
+
+STEP 2: STORAGE ENGINE (JAVA NIO)
+- Implement `StorageService` to simulate an S3-like bucket system using `java.nio`. 
+- Logic: `saveFile()`, `listFiles()`, `getFile()` mapped to `./cloud_storage/{userId}/{bucketName}`.
+
+STEP 3: PERSISTENCE (H2 TRACKING)
+- Ensure all Compute, Database, and Storage resources are tracked in the H2 Database with their current "Health Status".
+
+---
+
+WEEK 3: PRODUCTION READINESS & AUTO-HEALING
+
+STEP 4: HEALTH CHECK ENGINE
+- Create a background `@Scheduled` service that "pings" the Docker daemon to check the status of all active containers.
+- If a container is found in a `stopped` or `exited` state, mark it as `Unhealthy` in the H2 database.
+
+STEP 5: AUTO-HEALING (THE AWS EXPERIENCE)
+- Implement auto-healing logic: If a critical "Website" container crashes, the Engine Room should automatically attempt one restart. 
+- *Why?* This ensures that a user's "hosted website" stays online even if the back-end application crashes.
+
+---
+
+END OF WEEKS 2 & 3 CHECKLIST FOR MEMBER 1:
+[ ] MySQL containers are launched with persistent volumes.
+[ ] Files are correctly mapped to bucket-based directories.
+[ ] Health check service accurately detects container failures.
+[ ] Auto-healing logic successfully restarts a stopped Tomcat container.

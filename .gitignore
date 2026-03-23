@@ -1,0 +1,68 @@
+# ===========================
+# Maven
+# ===========================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ===========================
+# Spring Boot
+# ===========================
+spring-shell.log
+*.log
+
+# ===========================
+# Java
+# ===========================
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# ===========================
+# Eclipse
+# ===========================
+.classpath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+# ===========================
+# IntelliJ IDEA
+# ===========================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ===========================
+# VS Code
+# ===========================
+.vscode/
+.factorypath
+
+# ===========================
+# MiniCloud Runtime Artifacts
+# ===========================
+# Local cloud storage generated at runtime
+cloud_storage/
+storage/
+
+# H2 database files (embedded, dev only)
+*.db
+*.mv.db
+*.trace.db
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+Thumbs.db
+desktop.ini
