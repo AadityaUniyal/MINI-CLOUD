@@ -1,0 +1,53 @@
+package com.minicloud.service;
+
+import com.minicloud.model.SnsTopic;
+import com.minicloud.model.SnsSubscription;
+import com.minicloud.repository.SnsTopicRepository;
+import com.minicloud.repository.SnsSubscriptionRepository;
+import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.List;
+
+@Service
+public class SnsService {
+
+    private final SnsTopicRepository topicRepository;
+    private final SnsSubscriptionRepository subscriptionRepository;
+
+    public SnsService(SnsTopicRepository topicRepository, SnsSubscriptionRepository subscriptionRepository) {
+        this.topicRepository = topicRepository;
+        this.subscriptionRepository = subscriptionRepository;
+    }
+
+    public SnsTopic createTopic(String owner, String name) {
+        SnsTopic topic = new SnsTopic();
+        topic.setName(name);
+        topic.setOwner(owner);
+        topic.setArn("arn:minicloud:sns:region:account:" + name);
+        topic.setCreatedAt(LocalDateTime.now());
+        return topicRepository.save(topic);
+    }
+
+    public void subscribe(String topicName, String protocol, String endpoint) {
+        SnsTopic topic = topicRepository.findByName(topicName)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        
+        SnsSubscription sub = new SnsSubscription();
+        sub.setTopic(topic);
+        sub.setProtocol(protocol);
+        sub.setEndpoint(endpoint);
+        subscriptionRepository.save(sub);
+    }
+
+    public void publish(String topicName, String message) {
+        SnsTopic topic = topicRepository.findByName(topicName)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        
+        List<SnsSubscription> subs = subscriptionRepository.findByTopic(topic);
+        for (SnsSubscription sub : subs) {
+            // Mock delivery
+            System.out.println("SNS Delivery [" + sub.getProtocol() + " to " + sub.getEndpoint() + "]: " + message);
+        }
+    }
+}

@@ -1,9 +1,14 @@
 package com.minicloud.controller;
 
+import com.minicloud.dto.LaunchRequest;
 import com.minicloud.model.ComputeInstance;
 import com.minicloud.service.ComputeService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/compute")
@@ -16,9 +21,31 @@ public class ComputeController {
     }
 
     @PostMapping("/launch")
-    public ResponseEntity<ComputeInstance> launchInstance(@RequestParam String name) {
-        // In a real app, user details would be taken from the SecurityContext
-        ComputeInstance instance = computeService.launchInstance("admin", name);
+    public ResponseEntity<ComputeInstance> launchInstance(@RequestBody LaunchRequest request, Principal principal) {
+        ComputeInstance instance = computeService.launchInstance(
+            principal.getName(), 
+            request.getInstanceName(),
+            request.getVpcId(),
+            request.getSubnetId(),
+            request.getAmiId()
+        );
         return ResponseEntity.ok(instance);
+    }
+
+    @GetMapping("/list")
+    public List<ComputeInstance> listInstances(Authentication auth) {
+        return computeService.getInstancesByOwner(auth.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> terminateInstance(@PathVariable Long id, Authentication auth) {
+        computeService.terminateInstance(id, auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/terminate")
+    public ResponseEntity<Void> terminateInstance(@RequestParam String name) {
+        computeService.terminateInstance(name);
+        return ResponseEntity.ok().build();
     }
 }

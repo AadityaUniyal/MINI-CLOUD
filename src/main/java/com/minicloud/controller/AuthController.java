@@ -1,63 +1,56 @@
 package com.minicloud.controller;
 
-import com.minicloud.dto.AuthRequest;
-import com.minicloud.dto.AuthResponse;
-import com.minicloud.model.User;
-import com.minicloud.repository.UserRepository;
-import com.minicloud.security.JwtUtil;
+import com.minicloud.dto.*;
+import com.minicloud.service.AuthService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public AuthController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService,
-                          JwtUtil jwtUtil, UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
-        this.jwtUtil = jwtUtil;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    private final AuthService authService;
+    
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
-        User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role("ROLE_USER")
-                .build();
-        userRepository.save(user);
-
-        return ResponseEntity.ok(AuthResponse.builder()
-                .message("User registered successfully")
-                .build());
+        return ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
+        return ResponseEntity.ok(authService.login(request));
+    }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        final String token = jwtUtil.generateToken(userDetails);
+    @PostMapping("/register-aws")
+    public ResponseEntity<AuthResponse> registerAws(@RequestBody AwsRegisterRequest request) {
+        return ResponseEntity.ok(authService.registerAws(request));
+    }
 
-        return ResponseEntity.ok(AuthResponse.builder()
-                .token(token)
-                .message("Login successful")
-                .build());
+    @PostMapping("/login-aws")
+    public ResponseEntity<AuthResponse> loginAws(@RequestBody AwsLoginRequest request) {
+        return ResponseEntity.ok(authService.loginAws(request));
+    }
+
+    @PostMapping("/iam/create")
+    public ResponseEntity<com.minicloud.model.User> createIamUser(@RequestParam String iamUsername, 
+                                                                 @RequestParam String password, 
+                                                                 Principal principal) {
+        return ResponseEntity.ok(authService.createIamUser(principal.getName(), iamUsername, password));
+    }
+
+    @GetMapping("/iam/list")
+    public ResponseEntity<List<com.minicloud.model.User>> listIamUsers(Principal principal) {
+        return ResponseEntity.ok(authService.getIamUsersForRoot(principal.getName()));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<com.minicloud.model.User> getMe(Principal principal) {
+        return ResponseEntity.ok(authService.getUserFromToken(principal.getName()));
     }
 }

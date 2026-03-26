@@ -3,6 +3,7 @@ package com.minicloud.service;
 import com.github.dockerjava.api.model.Statistics;
 import com.minicloud.dto.StatsResponse;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 @Service
 public class StatsService {
@@ -34,5 +35,11 @@ public class StatsService {
                 .memoryLimit(stats.getMemoryStats().getLimit())
                 .status("ACTIVE")
                 .build();
+    }
+
+    public List<StatsResponse> getMultiContainerMetrics(List<String> containerIds) {
+        return containerIds.stream()
+                .map(this::getContainerMetrics)
+                .toList();
     }
 }

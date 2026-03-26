@@ -4,7 +4,10 @@ import com.minicloud.dto.ProvisionDbRequest;
 import com.minicloud.model.DatabaseInstance;
 import com.minicloud.service.DatabaseService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -18,16 +21,24 @@ public class DatabaseController {
     }
 
     @PostMapping("/provision")
-    public ResponseEntity<DatabaseInstance> provisionDatabase(@RequestBody ProvisionDbRequest request) {
-        // In a real app, user details would be taken from the SecurityContext
-        DatabaseInstance instance = databaseService.provisionDatabase("admin", 
-            request.getName(), request.getDbName(), request.getRootPassword());
-        return ResponseEntity.ok(instance);
+    public ResponseEntity<DatabaseInstance> provisionDatabase(@RequestBody ProvisionDbRequest request, Principal principal) {
+        return ResponseEntity.ok(databaseService.provisionDatabase(principal.getName(), request));
+    }
+
+    @PostMapping("/replica/{sourceId}")
+    public ResponseEntity<DatabaseInstance> createReadReplica(@PathVariable Long sourceId, Principal principal) {
+        return ResponseEntity.ok(databaseService.createReadReplica(principal.getName(), sourceId));
     }
 
     @GetMapping("/instances")
-    public ResponseEntity<List<DatabaseInstance>> getAllDatabases() {
-        return ResponseEntity.ok(databaseService.getAllDatabases());
+    public List<DatabaseInstance> listDatabases(Authentication auth) {
+        return databaseService.getDatabasesByOwner(auth.getName());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteDatabase(@PathVariable Long id, Authentication auth) {
+        databaseService.terminateDatabase(id, auth.getName());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/stop/{name}")

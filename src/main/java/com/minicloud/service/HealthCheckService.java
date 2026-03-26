@@ -1,12 +1,18 @@
 package com.minicloud.service;
 
+import com.minicloud.model.AuditLog;
 import com.minicloud.model.ComputeInstance;
+import com.minicloud.model.User;
+import com.minicloud.repository.AuditLogRepository;
 import com.minicloud.repository.ComputeInstanceRepository;
+import com.minicloud.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class HealthCheckService {
@@ -14,10 +20,17 @@ public class HealthCheckService {
     private static final Logger logger = LoggerFactory.getLogger(HealthCheckService.class);
     private final DockerService dockerService;
     private final ComputeInstanceRepository computeInstanceRepository;
+    private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
 
-    public HealthCheckService(DockerService dockerService, ComputeInstanceRepository computeInstanceRepository) {
+    public HealthCheckService(DockerService dockerService, 
+                            ComputeInstanceRepository computeInstanceRepository,
+                            AuditLogRepository auditLogRepository,
+                            UserRepository userRepository) {
         this.dockerService = dockerService;
         this.computeInstanceRepository = computeInstanceRepository;
+        this.auditLogRepository = auditLogRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -42,6 +55,20 @@ public class HealthCheckService {
                     dockerService.restartContainer(instance.getContainerId());
                     instance.setStatus("RUNNING");
                     logger.info("Auto-Healing: Successfully restarted {}.", instance.getName());
+                    
+                    // Log Auto-Healing Event for UI Timeline
+                    Optional<User> owner = userRepository.findByUsername(instance.getOwner());
+                    owner.ifPresent(user -> {
+                        AuditLog log = AuditLog.builder()
+                                .user(user)
+                                .action("AUTO_HEAL")
+                                .resourceId(instance.getName())
+                                .timestamp(LocalDateTime.now())
+                                .details("Critically unhealthy container restarted automatically by MiniCloud Healer.")
+                                .build();
+                        auditLogRepository.save(log);
+                    });
+
                 } catch (Exception e) {
                     logger.error("Auto-Healing: Failed for {}: {}", instance.getName(), e.getMessage());
                     instance.setStatus("CRITICAL_FAILURE");

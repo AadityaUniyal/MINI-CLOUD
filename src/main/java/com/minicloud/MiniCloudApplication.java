@@ -1,11 +1,14 @@
 package com.minicloud;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableCaching
+@EnableScheduling
 public class MiniCloudApplication {
     public static void main(String[] args) {
-        SpringApplication.run(MiniCloudApplication.class, args);
+        com.minicloud.ui.MiniCloudFxApp.main(args);
     }
 }
