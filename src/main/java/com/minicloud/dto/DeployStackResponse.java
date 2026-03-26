@@ -2,11 +2,10 @@ package com.minicloud.dto;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class DeployStackResponse {
     private String stackId;
     private String status;
