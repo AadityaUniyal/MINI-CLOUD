@@ -2,15 +2,14 @@ package com.minicloud.dto;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class DeployStackRequest {
     private String stackName;
-    private String computeImage;
+    private int instanceCount;
     private String dbName;
     private String dbPassword;
-    private int instanceCount;
+    private String template; // e.g., JAVA_WEB_APP, HA_WEB_CLUSTER
 }
