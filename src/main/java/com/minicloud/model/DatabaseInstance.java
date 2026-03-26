@@ -26,5 +26,16 @@ public class DatabaseInstance {
     private String status; // running, stopped
     private String owner; // username
 
+    // RDS-like Metadata
+    private String engine; // mysql, postgres
+    private String engineVersion; // 8.0
+    private String dbInstanceClass; // db.t3.micro
+    private String storageType; // gp2
+    private Integer allocatedStorage; // GB
+
+    private boolean multiAz;
+    private boolean publiclyAccessible;
+    private Integer backupRetention; // days
+
     private LocalDateTime createdAt;
 }
