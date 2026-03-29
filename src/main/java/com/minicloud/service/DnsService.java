@@ -49,6 +49,11 @@ public class DnsService {
         return saved;
     }
 
+    @Transactional
+    public DnsRecord createAliasRecord(String zoneName, String name, String targetResourceName) {
+        return createResourceRecord(zoneName, name, "ALIAS", targetResourceName, 60);
+    }
+
     public List<HostedZone> getHostedZonesByOwner(String owner) {
         return hostedZoneRepository.findByOwner(owner);
     }

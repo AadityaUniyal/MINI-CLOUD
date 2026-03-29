@@ -1,70 +1,108 @@
-# ☁️ MiniCloud — Java-Based Cloud Infrastructure Platform
+# ☁️ MiniCloud — Java-Based Private Cloud Platform
 
-> A simplified, locally-running cloud platform that provides core infrastructure services — built entirely with a **Pure Java** tech stack as a professional Project-Based Learning initiative.
-
----
-
-## 📌 Problem Statement
-
-Modern cloud environments are powerful but often complex for developmental learning and local simulation. **MiniCloud** is a unified cloud console that exposes essential infrastructure primitives — Compute, Storage, Databases, Load Balancing, and Identity Management — using nothing but Java, Docker, and a modern Spring Boot backend. It provides a local "Private Cloud" experience for developers to host, scale, and monitor web services.
+> A locally-running, full-featured cloud infrastructure platform replicating core AWS services — built entirely with a **Pure Java** stack as a Project-Based Learning (PBL) initiative.
 
 ---
 
-## 🚀 Core Infrastructure Services
+## 📌 What We Are Building
 
-| Service | Category | Functionality | Technology |
-|---|---|---|---|
-| **Compute** | Virtual Server | Host Tomcat web servers and custom applications | Docker Engine |
-| **Object Storage** | Data Backup | Store files, assets, and media in buckets | Java NIO (`java.nio.file`) |
-| **Managed Database** | DB Engine | Provision secure MySQL instances with dynamic ports | Docker (MySQL) |
-| **Load Balancer** | Traffic Mgmt | Distribute incoming traffic across multiple servers | Round Robin Algorithm |
-| **IAM & Auth** | Identity | Secure user access with JWT-based sessions | Spring Security |
-| **Health Check** | Reliability | Automated monitoring and self-healing engine | Background Polling |
+**MiniCloud** is a private cloud management system that simulates the experience of running your own AWS-like infrastructure — entirely on your local machine. It exposes the fundamental primitives that every real cloud platform provides: compute, storage, networking, databases, security, serverless, and messaging — all accessible through a native **JavaFX desktop console** and a **REST API**.
+
+The goal is to demonstrate how cloud services work under the hood: using Docker as the virtualization layer, Spring Boot as the service backbone, and Java NIO for storage — with no third-party cloud dependencies.
 
 ---
 
-## 🏗️ System Architecture & Workflow
+## 🚀 Services We Offer
 
-### Architectural Flowchart
-```mermaid
-graph TD
-    User((User / Frontend)) -->|REST + JWT| API[Spring Boot REST API]
-    API -->|Auth| Security[Spring Security & JWT]
-    Security -->|Authorized| Controller{Controllers}
-    
-    Controller -->|Launch| Compute[Compute Service]
-    Controller -->|Provision| DB[Database Service]
-    Controller -->|Upload| Storage[Bucket Service]
-    
-    Compute -->|Docker Java API| Docker[(Docker Engine)]
-    DB -->|Docker Java API| Docker
-    Storage -->|Java NIO| Disk[Local Storage Registry]
-    
-    subgraph Reliability Engine
-        Health[Health Check Service] -->|Poll Status| Docker
-        Health -->|Auto-Heal| Docker
-    end
-    
-    subgraph Persistence Layer
-        H2[(Embedded H2 Database)] --- API
-    end
+MiniCloud replicates **15+ AWS-equivalent services** grouped into 6 categories:
+
+### 🖥️ Compute
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **Compute Instances** | EC2 | Launch containerized Tomcat application servers via Docker |
+| **Lambda Functions** | AWS Lambda | Execute lightweight, event-driven functions in Docker containers |
+| **Auto-Orchestration** | CloudFormation | Deploy full stacks (Web + DB + LB) in a single API call |
+
+### 🗄️ Storage & Database
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **Object Storage (Buckets)** | S3 | Store files, assets, and media using Java NIO on local disk |
+| **Volumes** | EBS | Attach persistent block storage to compute instances |
+| **Managed Database** | RDS | Provision isolated MySQL containers with dynamic port mapping |
+| **DynamoDB-style Tables** | DynamoDB | Schema-free key-value store with item-level CRUD |
+
+### 🌐 Networking
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **Virtual Private Cloud** | VPC | Isolate resource groups into private virtual networks |
+| **Subnets** | Subnets | Segment VPCs into logical address spaces |
+| **DNS (Hosted Zones)** | Route 53 | Manage domain name resolution records internally |
+| **Load Balancer** | ELB/ALB | Distribute traffic across instances using Round Robin |
+| **Firewall Rules** | Security Groups | Define allow/deny rules for inbound and outbound traffic |
+
+### 🔐 Security & Identity
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **IAM (Users & Roles)** | IAM | Manage users, roles, and permission policies |
+| **JWT Authentication** | Cognito / STS | Secure all API access with signed JSON Web Tokens |
+| **Security Policies** | IAM Policies | Enforce resource-level access control per user |
+
+### 📬 Messaging
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **Message Queue (SQS)** | SQS | Producer-consumer message queue with async delivery |
+| **Pub/Sub Notifications (SNS)** | SNS | Topic-based event broadcasting (supports SQS endpoints, fully functional) |
+
+### 📊 Monitoring & Governance
+| MiniCloud Service | AWS Equivalent | Description |
+|---|---|---|
+| **Real-Time Metrics** | CloudWatch | Persist CPU/RAM usage of containers every 30s |
+| **Health Check Engine** | Route 53 Health Checks | Auto-detect crashed instances and restart them every 10s |
+| **Audit Log (CloudTrail)** | CloudTrail | Record all user actions for compliance and review |
+| **Billing Dashboard** | AWS Cost Explorer | Track resource usage and compute simulated cost |
+| **Cloud Metadata** | EC2 Instance Metadata | Expose runtime metadata for running instances |
+| **Virtual Web Hosting** | S3 & DNS | Host static websites from buckets with domain mapping |
+
+---
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│               JavaFX Management Console                  │
+│         (Native Desktop Dashboard — AWS-style UI)        │
+└────────────────────────┬────────────────────────────────┘
+                         │ REST + JWT (HTTP)
+┌────────────────────────▼────────────────────────────────┐
+│              Spring Boot REST API (Port 8080)            │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────────┐  │
+│  │ Compute  │ │ Storage  │ │ Network  │ │  Security │  │
+│  │ Lambda   │ │ Database │ │   DNS    │ │    IAM    │  │
+│  │ Orchestr.│ │ DynamoDB │ │   VPC    │ │  Billing  │  │
+│  │ Stats    │ │ Volumes  │ │ Firewall │ │ Messaging │  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └─────┬─────┘  │
+│       │             │            │              │         │
+│  ┌────▼─────────────▼────────────▼──────────────▼─────┐  │
+│  │         Spring Data JPA + H2 (Embedded DB)          │  │
+│  └─────────────────────────────────────────────────────┘  │
+└──────────────────────────┬──────────────────────────────┘
+                           │ docker-java SDK
+┌──────────────────────────▼──────────────────────────────┐
+│                    Docker Engine                          │
+│   [ Tomcat Containers ]  [ MySQL Containers ]            │
+│   [ Lambda Runners   ]   [ Custom Networks ]             │
+└─────────────────────────────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────┐
+│              Local Disk (Java NIO)                        │
+│   [ Object Storage Buckets ]  [ EBS-style Volumes ]      │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Detailed Execution Flow
-- **Request Layer**: Users interact via a JavaFX Dashboard, sending JSON requests with Bearer tokens.
-- **Service Layer**: Decoupled business logic handles resource allocation, orchestration, and naming.
-- **Infrastructure Layer**: Utilizes the high-level `docker-java` library to communicate with the local Docker daemon.
-- **Reliability Layer**: A dedicated Background Worker (`HealthCheckService`) monitors container health every 10 seconds, performing automatic restarts if an instance crashes.
-
-## 🌐 Cloud Hosting Capabilities
-
-MiniCloud is specifically designed to facilitate the hosting and management of complex web applications:
-
-1. **Web Server Hosting**: Instantly launch and manage Tomcat-based application servers for Java web applications.
-2. **Database Provisioning**: Create isolated database backends with pre-configured credentials and schema support.
-3. **Asset Storage**: Store user-uploaded content, static assets (images/videos), and backups via a robust object storage registry.
-4. **Traffic Scaling**: Utilize the Load Balancer to scale horizontally by distributing user traffic across multiple server instances.
-5. **Operational Monitoring**: Track real-time performance metrics (CPU/RAM) and rely on the auto-healing engine for 24/7 service availability.
+### Key Design Principles
+- **Multi-tenancy**: Every resource is scoped to the authenticated owner; users see only their own instances.
+- **Auto-healing**: `HealthCheckService` polls Docker every 10 seconds and restarts crashed containers automatically.
+- **Stack Deployment**: `OrchestrationService` provisions a full Web Server + Database + Load Balancer in a single atomic operation.
 
 ---
 
@@ -75,10 +113,14 @@ MiniCloud is specifically designed to facilitate the hosting and management of c
 | **Language** | Java | 17 |
 | **Backend Framework** | Spring Boot | 3.2.4 |
 | **Security** | Spring Security + JJWT | 0.11.5 |
-| **ORM / DB** | Spring Data JPA + H2 | Embedded |
-| **Container Engine** | docker‑java | 3.3.4 |
-| **Frontend** | JavaFX | 21 |
-| **Build Tool** | Apache Maven | 3.x |
+| **ORM / Persistence** | Spring Data JPA + Hibernate | 3.x |
+| **Embedded Database** | H2 (in-memory, dev mode) | — |
+| **Container Engine** | docker-java SDK | 3.3.4 |
+| **Storage Engine** | Java NIO (`java.nio.file`) | Built-in |
+| **Frontend / Console** | JavaFX | 21.0.2 |
+| **Template Engine** | Thymeleaf | 3.x |
+| **XML Binding** | JAXB | 2.3.1 |
+| **Build Tool** | Apache Maven | 3.9.6 |
 
 ---
 
@@ -86,88 +128,43 @@ MiniCloud is specifically designed to facilitate the hosting and management of c
 
 ```
 JAVA-PBL/
-├── planning/                        # Team planning and architecture docs
-│   ├── overview.txt
-│   ├── plan.txt
-│   ├── system_architecture.md
-│   ├── features.txt
-│   ├── team_structure.txt
-│   ├── week1_plan.txt
-│   ├── week2_plan.txt
-│   ├── week2_3_overview.txt
-│   ├── member1_week2_3.txt
-│   ├── member2_week2_3.txt
-│   └── member3_week2_3.txt
-│
-├── src/
-│   ├── main/
-│   │   ├── java/com/minicloud/
-│   │   │   ├── MiniCloudApplication.java
-│   │   │   ├── config/
-│   │   │   │   ├── AppConfig.java
-│   │   │   │   ├── DockerConfig.java
-│   │   │   │   └── SecurityConfig.java
-│   │   │   ├── controller/
-│   │   │   │   ├── AuthController.java
-│   │   │   │   ├── ComputeController.java
-│   │   │   │   ├── StorageController.java
-│   │   │   │   ├── DatabaseController.java
-│   │   │   │   ├── StatsController.java
-│   │   │   │   ├── LoadBalancerController.java
-│   │   │   │   └── OrchestrationController.java
-│   │   │   ├── dto/
-│   │   │   │   ├── AuthRequest.java
-│   │   │   │   ├── AuthResponse.java
-│   │   │   │   ├── LaunchRequest.java
-│   │   │   │   ├── LaunchResponse.java
-│   │   │   │   ├── ProvisionDbRequest.java
-│   │   │   │   ├── DeployStackRequest.java
-│   │   │   │   ├── DeployStackResponse.java
-│   │   │   │   └── StatsResponse.java
-│   │   │   ├── exception/
-│   │   │   │   ├── GlobalExceptionHandler.java
-│   │   │   │   └── ResourceNotFoundException.java
-│   │   │   ├── model/
-│   │   │   │   ├── User.java
-│   │   │   │   ├── ComputeInstance.java
-│   │   │   │   ├── Bucket.java
-│   │   │   │   ├── StorageFile.java
-│   │   │   │   ├── DatabaseInstance.java
-│   │   │   │   ├── LoadBalancer.java
-│   │   │   │   └── AuditLog.java
-│   │   │   ├── repository/
-│   │   │   │   ├── UserRepository.java
-│   │   │   │   ├── ComputeInstanceRepository.java
-│   │   │   │   ├── BucketRepository.java
-│   │   │   │   ├── StorageFileRepository.java
-│   │   │   │   ├── DatabaseInstanceRepository.java
-│   │   │   │   ├── LoadBalancerRepository.java
-│   │   │   │   └── AuditLogRepository.java
-│   │   │   ├── security/
-│   │   │   │   ├── JwtFilter.java
-│   │   │   │   ├── JwtUtil.java
-│   │   │   │   └── CustomUserDetailsService.java
-│   │   │   └── service/
-│   │   │       ├── AuthService.java
-│   │   │       ├── DockerService.java
-│   │   │       ├── BucketService.java
-│   │   │       ├── DatabaseService.java
-│   │   │       ├── HealthCheckService.java
-│   │   │       ├── StatsService.java
-│   │   │       ├── LoadBalancerService.java
-│   │   │       └── OrchestrationService.java
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-│       └── java/com/minicloud/
-│           ├── controller/
-│           │   ├── AuthControllerTest.java
-│           │   └── ComputeControllerTest.java
-│           └── service/
-│               ├── DockerServiceTest.java
-│               ├── BucketServiceTest.java
-│               └── DatabaseServiceTest.java
-│
+├── src/main/java/com/minicloud/
+│   ├── MiniCloudApplication.java
+│   ├── config/                    # Security, Docker, App configuration
+│   ├── controller/                # 22 REST controllers (one per service)
+│   │   ├── AuthController.java
+│   │   ├── ComputeController.java
+│   │   ├── BucketController.java
+│   │   ├── DatabaseController.java
+│   │   ├── DynamoController.java
+│   │   ├── VolumeController.java
+│   │   ├── LoadBalancerController.java
+│   │   ├── VPCController.java
+│   │   ├── SubnetController.java
+│   │   ├── DnsController.java
+│   │   ├── FirewallController.java
+│   │   ├── IamController.java
+│   │   ├── SecurityController.java
+│   │   ├── LambdaController.java
+│   │   ├── OrchestrationController.java
+│   │   ├── CloudFormationController.java
+│   │   ├── MessagingController.java
+│   │   ├── StatsController.java
+│   │   ├── MonitoringController.java
+│   │   ├── BillingController.java
+│   │   ├── AuditLogController.java
+│   │   └── MetadataController.java
+│   ├── service/                   # Business logic per service
+│   ├── model/                     # JPA entities
+│   ├── dto/                       # Request / Response DTOs
+│   ├── repository/                # Spring Data repositories
+│   ├── security/                  # JWT filter, util, user details
+│   ├── ui/                        # JavaFX dashboard application
+│   └── util/
+├── src/main/resources/
+│   └── application.properties
+├── docker/                        # Docker-related configs
+├── storage/                       # Local bucket / volume storage root
 ├── pom.xml
 └── README.md
 ```
@@ -175,8 +172,6 @@ JAVA-PBL/
 ---
 
 ## ⚙️ Prerequisites
-
-Before running the project, ensure you have the following installed:
 
 - **JDK 17+** — [Download](https://adoptium.net/)
 - **Apache Maven 3.8+** — [Download](https://maven.apache.org/)
@@ -188,59 +183,73 @@ Before running the project, ensure you have the following installed:
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/minicloud.git
-cd minicloud
+git clone https://github.com/AadityaUniyal/MINI-CLOUD.git
+cd MINI-CLOUD
 ```
 
 ### 2. Start Docker Desktop
-Make sure Docker is running before starting the backend — the application connects to the Docker daemon on startup.
+Docker must be running before starting the backend. The application connects to the Docker daemon on startup to manage containers.
 
-### 3. Run the Spring Boot backend
+### 3. Run the backend
 ```bash
 mvn spring-boot:run
 ```
-The backend starts on **`http://localhost:8080`**.
+The backend starts on **`http://localhost:8080`**
 
-### 4. Access the H2 Console (dev only)
-Navigate to `http://localhost:8080/h2-console` and connect with the credentials defined in `application.properties`.
+### 4. H2 Database Console *(dev only)*
+```
+http://localhost:8080/h2-console
+```
 
 ---
 
 ## 📡 Key API Endpoints
 
+### Auth
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/auth/register` | Register a new user |
-| `POST` | `/api/auth/login` | Login and receive JWT token |
-| `POST` | `/api/compute/launch` | Launch a new Tomcat container |
-| `GET` | `/api/compute/instances` | List all compute instances |
-| `POST` | `/api/storage/upload` | Upload a file to a bucket |
-| `GET` | `/api/storage/files` | List files in a bucket |
-| `POST` | `/api/database/provision` | Provision a MySQL container |
-| `GET` | `/api/databases` | List all database instances |
-| `POST` | `/api/orchestration/deploy-stack` | Deploy a full Web + DB + LB stack |
-| `GET` | `/api/stats/{containerId}` | Get live CPU/RAM metrics |
+| `POST` | `/api/auth/login` | Login and receive JWT |
 
-> **Authentication**: All endpoints (except `/api/auth/**`) require a `Bearer <JWT>` header.
+### Compute & Storage
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/compute/launch` | Launch a compute instance |
+| `GET` | `/api/compute/instances` | List your instances |
+| `POST` | `/api/storage/upload` | Upload file to a bucket |
+| `POST` | `/api/database/provision` | Provision a MySQL container |
+| `POST` | `/api/dynamo/tables` | Create a DynamoDB-style table |
+| `POST` | `/api/volumes` | Create a persistent volume |
+
+### Networking
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/vpc` | Create a VPC |
+| `POST` | `/api/subnets` | Create a subnet in a VPC |
+| `POST` | `/api/dns/zones` | Create a hosted zone |
+| `POST` | `/api/firewall/rules` | Add a firewall rule |
+| `POST` | `/api/loadbalancer` | Create a load balancer |
+
+### Advanced
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/orchestration/deploy-stack` | Deploy a full Web+DB+LB stack |
+| `POST` | `/api/lambda/invoke` | Execute a Lambda function |
+| `GET` | `/api/stats/{containerId}` | Live CPU/RAM metrics |
+| `GET` | `/api/billing/summary` | View usage and estimated cost |
+| `GET` | `/api/audit/logs` | View your audit trail |
+
+> **Auth**: All endpoints except `/api/auth/**` require `Authorization: Bearer <JWT>`
 
 ---
 
-## 👥 Team Structure & Work Division
+## 👥 Team
 
 | Member | Role | Core Responsibility |
 |---|---|---|
-| **Member 1** | Hardware Lead | Services layer, Docker logic, Health Check engine, Java NIO storage |
-| **Member 2** | Network Lead | REST Controllers, Load Balancer, Orchestration API, Metrics endpoints |
-| **Member 3** | UX Architect | JavaFX frontend, Dashboard UI, Website Wizard, Operations Monitor |
-
-### 8-Week Timeline Summary
-
-| Phase | Weeks | Goal |
-|---|---|---|
-| Phase 1 | 1–3 | **70% Functional** — IAM, Compute, Storage, Database, Load Balancer |
-| Phase 2 | 4–5 | Real-time Monitoring & Billing |
-| Phase 3 | 6–7 | Polish, Error Handling, Dark Mode, Animations |
-| Phase 4 | 8 | JUnit Tests, Postman, `jpackage` Installer, Demo Video |
+| **Member 1** | Backend Lead | Services layer, Docker engine, Health Check, Java NIO storage |
+| **Member 2** | API Lead | REST Controllers, Networking, Messaging, Orchestration, Metrics |
+| **Member 3** | UX Lead | JavaFX console, Dashboard UI, Resource monitoring views |
 
 ---
 
@@ -250,13 +259,10 @@ Navigate to `http://localhost:8080/h2-console` and connect with the credentials 
 mvn test
 ```
 
----
-
-## 📦 Building a Standalone Package
+## 📦 Build JAR
 
 ```bash
 mvn package
-# Output: target/minicloud-backend-0.0.1-SNAPSHOT.jar
 java -jar target/minicloud-backend-0.0.1-SNAPSHOT.jar
 ```
 
@@ -264,4 +270,4 @@ java -jar target/minicloud-backend-0.0.1-SNAPSHOT.jar
 
 ## 📄 License
 
-This project is developed for academic purposes as part of a semester Project-Based Learning (PBL) course.
+Academic project developed as part of a semester Project-Based Learning (PBL) course.

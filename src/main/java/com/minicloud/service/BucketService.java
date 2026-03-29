@@ -48,7 +48,7 @@ public class BucketService {
         this.bucketPolicyRepository = bucketPolicyRepository;
     }
 
-    public Bucket createBucket(String name, String owner) throws IOException {
+    public Bucket createBucket(String name, String owner, String region) throws IOException {
         Path bucketPath = Paths.get(storageRoot, name);
         if (!Files.exists(bucketPath)) {
             Files.createDirectories(bucketPath);
@@ -57,7 +57,7 @@ public class BucketService {
         Bucket bucket = Bucket.builder()
                 .name(name)
                 .owner(owner)
-                .region("us-east-1")
+                .region(region != null ? region : "us-east-1")
                 .accessControl("Private")
                 .arn("arn:aws:s3:::" + name)
                 .createdAt(LocalDateTime.now())
@@ -68,7 +68,7 @@ public class BucketService {
                 .user(user)
                 .action("CREATE_BUCKET")
                 .resourceId(name)
-                .details("Created storage bucket: " + name)
+                .details("Created storage bucket: " + name + " in region: " + (region != null ? region : "us-east-1"))
                 .timestamp(LocalDateTime.now())
                 .build());
         });
@@ -225,10 +225,51 @@ public class BucketService {
         return bucketPolicyRepository.save(policy);
     }
 
-    public boolean canAccess(String bucketName, String user, String action) {
-        // Mock policy check: Just check ownership or public-read policy
+    public Bucket enableWebsiteHosting(String name, String owner, String indexDoc, String errorDoc) {
+        Bucket bucket = bucketRepository.findByName(name)
+                .filter(b -> b.getOwner().equals(owner))
+                .orElseThrow(() -> new RuntimeException("Bucket not found or access denied"));
+        bucket.setWebsiteEnabled(true);
+        bucket.setIndexDocument(indexDoc != null ? indexDoc : "index.html");
+        bucket.setErrorDocument(errorDoc != null ? errorDoc : "error.html");
+        return bucketRepository.save(bucket);
+    }
+
+    public Path resolveWebsiteFile(String bucketName, String path) {
+        Bucket bucket = bucketRepository.findByName(bucketName)
+                .filter(Bucket::isWebsiteEnabled)
+                .orElseThrow(() -> new RuntimeException("Bucket website not enabled or not found"));
+        
+        String fileName = (path == null || path.isEmpty() || path.equals("/")) ? bucket.getIndexDocument() : path;
+        return Paths.get(storageRoot, bucket.getOwner(), bucketName, fileName);
+    }
+
+    public Path resolveErrorDocument(String bucketName) {
         return bucketRepository.findByName(bucketName)
-                .map(b -> b.getOwner().equals(user) || "Public-Read".equals(b.getAccessControl()))
+                .filter(Bucket::isWebsiteEnabled)
+                .filter(b -> b.getErrorDocument() != null)
+                .map(b -> Paths.get(storageRoot, b.getOwner(), bucketName, b.getErrorDocument()))
+                .orElse(null);
+    }
+
+    public String getContentType(Path path) {
+        try {
+            String type = Files.probeContentType(path);
+            if (type == null) {
+                if (path.toString().endsWith(".css")) return "text/css";
+                if (path.toString().endsWith(".js")) return "application/javascript";
+                return "text/plain";
+            }
+            return type;
+        } catch (IOException e) {
+            return "application/octet-stream";
+        }
+    }
+
+    public boolean canAccess(String bucketName, String user, String action) {
+        // Mock policy check: Just check ownership or public-read policy or if website is enabled
+        return bucketRepository.findByName(bucketName)
+                .map(b -> b.getOwner().equals(user) || "Public-Read".equals(b.getAccessControl()) || b.isWebsiteEnabled())
                 .orElse(false);
     }
 }

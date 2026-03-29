@@ -46,4 +46,10 @@ public class DatabaseController {
         databaseService.stopDatabase(name);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/delete")
+    public ResponseEntity<Void> deleteDatabase(@RequestParam String name) {
+        databaseService.terminateDatabase(name);
+        return ResponseEntity.ok().build();
+    }
 }

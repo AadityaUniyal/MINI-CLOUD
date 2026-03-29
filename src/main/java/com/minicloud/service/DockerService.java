@@ -14,8 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 
 @Service
 public class DockerService {
@@ -23,6 +28,7 @@ public class DockerService {
     private static final Logger log = LoggerFactory.getLogger(DockerService.class);
     private DockerClient dockerClient;
     private boolean dockerAvailable = false;
+    private final Map<String, HttpServer> simulators = new ConcurrentHashMap<>();
 
     public DockerService() {
         try {
@@ -46,7 +52,7 @@ public class DockerService {
             log.info("DockerService: Connected to Docker daemon successfully.");
         } catch (Throwable e) {
             dockerAvailable = false;
-            log.warn("DockerService: Could not connect to Docker daemon ({}). Docker features will be unavailable. Start Docker Desktop to enable them.", e.getMessage());
+            log.warn("DockerService: Could not connect to Docker daemon ({}). MiniCloud will gracefully fall back to Embedded Emulator Mode. Instances will launch as background Java threads.", e.getMessage());
         }
     }
 
@@ -57,14 +63,39 @@ public class DockerService {
         return dockerClient;
     }
 
-    /**
-     * Week 1: Launch a Tomcat container (EC2-like)
-     */
+    private void startSimulator(String simId, int port, String type) {
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+            server.createContext("/", exchange -> {
+                String response = "<h1>MiniCloud " + type + " Simulation</h1>"
+                        + "<p>This is a fallback EC2/RDS embedded emulator serving port " + port + "</p>"
+                        + "<p>Instance ID: " + simId + "</p>";
+                exchange.getResponseHeaders().add("Content-Type", "text/html");
+                exchange.sendResponseHeaders(200, response.length());
+                java.io.OutputStream os = exchange.getResponseBody();
+                os.write(response.getBytes());
+                os.close();
+            });
+            server.setExecutor(Executors.newCachedThreadPool());
+            server.start();
+            simulators.put(simId, server);
+            log.info("Started Embedded Simulator [{}] on port {}", type, port);
+        } catch (Exception e) {
+            log.error("Failed to start embedded simulator on port {}", port, e);
+        }
+    }
+
     public String launchTomcatContainer() {
         return launchTomcatContainer("tomcat-" + System.currentTimeMillis(), 8080);
     }
 
     public String launchTomcatContainer(String instanceName, int hostPort) {
+        if (!dockerAvailable) {
+            String simId = "sim-" + instanceName + "-" + System.currentTimeMillis();
+            startSimulator(simId, hostPort, "Tomcat EC2");
+            return simId;
+        }
+
         try {
             getClient().pullImageCmd("tomcat:latest").start().awaitCompletion();
         } catch (InterruptedException e) {
@@ -81,10 +112,13 @@ public class DockerService {
         return container.getId();
     }
 
-    /**
-     * Week 2: Launch a MySQL container (RDS-like)
-     */
     public String launchMysqlInstance(String instanceName, String dbName, String rootPassword, int hostPort) {
+        if (!dockerAvailable) {
+            String simId = "sim-" + instanceName + "-" + System.currentTimeMillis();
+            startSimulator(simId, hostPort, "MySQL RDS");
+            return simId;
+        }
+
         try {
             getClient().pullImageCmd("mysql:8.0").start().awaitCompletion();
         } catch (InterruptedException e) {
@@ -102,49 +136,13 @@ public class DockerService {
         return container.getId();
     }
 
-    public void stopContainer(String containerId) {
-        getClient().stopContainerCmd(containerId).exec();
-    }
-
-    public void removeContainer(String containerId) {
-        getClient().removeContainerCmd(containerId).exec();
-    }
-
-    public String getContainerStatus(String containerId) {
-        if (!dockerAvailable) return "DOCKER_UNAVAILABLE";
-        try {
-            return dockerClient.inspectContainerCmd(containerId).exec().getState().getStatus();
-        } catch (Exception e) {
-            return "UNKNOWN";
-        }
-    }
-
-    public void restartContainer(String containerId) {
-        getClient().restartContainerCmd(containerId).exec();
-    }
-
-    public Statistics getContainerStats(String containerId) {
-        if (!dockerAvailable) return null;
-        try {
-            final Statistics[] statsHolder = new Statistics[1];
-            dockerClient.statsCmd(containerId).withNoStream(true).exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<Statistics>() {
-                @Override
-                public void onNext(Statistics stats) {
-                    statsHolder[0] = stats;
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        // Ignore
-                    }
-                }
-            }).awaitCompletion(5, java.util.concurrent.TimeUnit.SECONDS);
-            return statsHolder[0];
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public String launchPostgresInstance(String instanceName, String dbName, String password, int hostPort) {
+        if (!dockerAvailable) {
+            String simId = "sim-" + instanceName + "-" + System.currentTimeMillis();
+            startSimulator(simId, hostPort, "Postgres RDS");
+            return simId;
+        }
+
         try {
             getClient().pullImageCmd("postgres:latest").start().awaitCompletion();
         } catch (InterruptedException e) {
@@ -162,7 +160,111 @@ public class DockerService {
         return container.getId();
     }
 
+    public void stopContainer(String containerId) {
+        if (containerId.startsWith("sim-")) {
+            if (simulators.containsKey(containerId)) {
+                simulators.get(containerId).stop(0);
+            }
+            return;
+        }
+        getClient().stopContainerCmd(containerId).exec();
+    }
+
+    public void removeContainer(String containerId) {
+        if (containerId.startsWith("sim-")) {
+            simulators.remove(containerId);
+            return;
+        }
+        getClient().removeContainerCmd(containerId).exec();
+    }
+
+    public String getContainerStatus(String containerId) {
+        if (containerId.startsWith("sim-")) {
+            return simulators.containsKey(containerId) ? "running" : "exited";
+        }
+        if (!dockerAvailable) return "DOCKER_UNAVAILABLE";
+        try {
+            return dockerClient.inspectContainerCmd(containerId).exec().getState().getStatus();
+        } catch (Exception e) {
+            return "UNKNOWN";
+        }
+    }
+
+    public void restartContainer(String containerId) {
+        if (containerId.startsWith("sim-")) return; // Simulators don't pause easily
+        getClient().restartContainerCmd(containerId).exec();
+    }
+
+    public Statistics getContainerStats(String containerId) {
+        if (containerId.startsWith("sim-")) return null; // Can't map full Docker stats to HTTP Server
+        if (!dockerAvailable) return null;
+        try {
+            final Statistics[] statsHolder = new Statistics[1];
+            dockerClient.statsCmd(containerId).withNoStream(true).exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<Statistics>() {
+                @Override
+                public void onNext(Statistics stats) {
+                    statsHolder[0] = stats;
+                    try { close(); } catch (IOException e) { }
+                }
+            }).awaitCompletion(5, java.util.concurrent.TimeUnit.SECONDS);
+            return statsHolder[0];
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public boolean isDockerAvailable() {
         return dockerAvailable;
+    }
+
+    public String executeCommandInContainer(String image, String command) {
+        return executeCommandInContainer(image, command, null);
+    }
+
+    public String executeCommandInContainer(String image, String command, Map<String, String> env) {
+        if (!dockerAvailable) {
+            log.info("Emulator Mode: Intercepted pseudo-lambda execution [{}]", command);
+            try { Thread.sleep(600); } catch(Exception ignored){}
+            return "Execution simulated in Emulator Mode: \n{ \"status\": 200, \"message\": \"Fallback Lambda Execution Successful\" }";
+        }
+
+        try {
+            getClient().pullImageCmd(image).start().awaitCompletion();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "ERROR: Pull interrupted";
+        }
+
+        com.github.dockerjava.api.command.CreateContainerCmd createCmd = getClient().createContainerCmd(image)
+                .withCmd("sh", "-c", command);
+
+        if (env != null && !env.isEmpty()) {
+            java.util.List<String> envList = new java.util.ArrayList<>();
+            env.forEach((k, v) -> envList.add(k + "=" + v));
+            createCmd.withEnv(envList);
+        }
+
+        CreateContainerResponse container = createCmd.exec();
+        getClient().startContainerCmd(container.getId()).exec();
+
+        StringBuilder logs = new StringBuilder();
+        try {
+            getClient().logContainerCmd(container.getId())
+                    .withStdOut(true)
+                    .withStdErr(true)
+                    .withFollowStream(true)
+                    .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<com.github.dockerjava.api.model.Frame>() {
+                        @Override
+                        public void onNext(com.github.dockerjava.api.model.Frame item) {
+                            logs.append(new String(item.getPayload()));
+                        }
+                    }).awaitCompletion(10, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            getClient().removeContainerCmd(container.getId()).withForce(true).exec();
+        }
+
+        return logs.toString().trim();
     }
 }

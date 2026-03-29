@@ -40,6 +40,27 @@ public class MiniCloudFxApp extends Application {
     private final String API_BASE = "http://localhost:8080/api";
     private VBox detailsPane;
     private javafx.animation.Timeline autoRefreshTimeline;
+    private JsonNode globalTelemetry = new ObjectMapper().createObjectNode();
+    private javafx.animation.Timeline globalTelemetryTimeline;
+    
+    private String getTelemetry(String key, String fallback) {
+        if (globalTelemetry != null && globalTelemetry.has(key)) {
+            return globalTelemetry.get(key).asText();
+        }
+        return fallback;
+    }
+    
+    private void fetchTelemetry(Runnable onDone) {
+        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/monitoring/dashboard")).header("Authorization", "Bearer " + jwtToken).GET().build();
+        httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+            try {
+                if(res.statusCode() == 200) {
+                    globalTelemetry = new ObjectMapper().readTree(res.body());
+                    if (onDone != null) Platform.runLater(onDone);
+                }
+            } catch(Exception e) {}
+        });
+    }
 
     @Override
     public void init() {
@@ -348,27 +369,39 @@ public class MiniCloudFxApp extends Application {
         TreeItem<String> rds = new TreeItem<>("\u2615 RDS");
         rds.getChildren().addAll(new TreeItem<>("Databases"), new TreeItem<>("Snapshots"));
 
-        TreeItem<String> s3 = new TreeItem<>("\u1F4E6 S3");
+        TreeItem<String> dynamo = new TreeItem<>("\uD83D\uDDBE DynamoDB");
+        dynamo.getChildren().addAll(new TreeItem<>("Tables"));
+
+        TreeItem<String> s3 = new TreeItem<>("\u26E9 S3");
         s3.getChildren().addAll(new TreeItem<>("Buckets"));
         
-        TreeItem<String> vpc = new TreeItem<>("\uD83D\uDDA5 VPC"); // Monitor icon
-        vpc.getChildren().addAll(new TreeItem<>("Your VPCs"), new TreeItem<>("Subnets"), new TreeItem<>("Security Groups"));
+        TreeItem<String> lambda = new TreeItem<>("\u26A1 Lambda");
+        lambda.getChildren().addAll(new TreeItem<>("Functions"));
 
-        TreeItem<String> route53 = new TreeItem<>("\uD83C\uDF10 Route 53"); // Globe icon
+        TreeItem<String> sns = new TreeItem<>("\uD83D\uDCE2 SNS");
+        sns.getChildren().addAll(new TreeItem<>("Topics"));
+
+        TreeItem<String> sqs = new TreeItem<>("\u2709 SQS");
+        sqs.getChildren().addAll(new TreeItem<>("Queues"));
+
+        TreeItem<String> vpc = new TreeItem<>("\u26C5 VPC");
+        vpc.getChildren().addAll(new TreeItem<>("Your VPCs"), new TreeItem<>("Subnets"), new TreeItem<>("VPC Security Groups"));
+
+        TreeItem<String> route53 = new TreeItem<>("\uD83C\uDF10 Route 53");
         route53.getChildren().addAll(new TreeItem<>("Hosted Zones"));
 
-        TreeItem<String> cf = new TreeItem<>("\uD83D\uDCDC CloudFormation"); // Scroll icon
+        TreeItem<String> cf = new TreeItem<>("\uD83D\uDCDC CloudFormation");
         cf.getChildren().addAll(new TreeItem<>("Stacks"));
 
-        TreeItem<String> security = new TreeItem<>("\uD83D\uDEE1 Security"); // Shield icon
+        TreeItem<String> security = new TreeItem<>("\uD83D\uDEE1 Security");
         security.getChildren().addAll(new TreeItem<>("GuardDuty Findings"), new TreeItem<>("WAF Rules"), new TreeItem<>("IAM Groups"));
 
-        TreeItem<String> billing = new TreeItem<>("\u1F4B0 Billing");
+        TreeItem<String> billing = new TreeItem<>("\uD83D\uDCB0 Billing");
         billing.getChildren().addAll(new TreeItem<>("Cost Explorer"));
 
-        TreeItem<String> account = new TreeItem<>("\u1F4B3 My Account");
+        TreeItem<String> account = new TreeItem<>("\uD83D\uDCB3 My Account");
 
-        navRoot.getChildren().addAll(home, ec2, rds, s3, vpc, route53, cf, security, billing, account);
+        navRoot.getChildren().addAll(home, ec2, rds, dynamo, s3, lambda, sns, sqs, vpc, route53, cf, security, billing, account);
         navTree.setRoot(navRoot);
         navTree.setShowRoot(false);
         navTree.getStyleClass().add("aws-tree");
@@ -436,6 +469,14 @@ public class MiniCloudFxApp extends Application {
         primaryStage.setScene(scene);
         
         navTree.getSelectionModel().select(home);
+        
+        if (globalTelemetryTimeline != null) globalTelemetryTimeline.stop();
+        globalTelemetryTimeline = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.seconds(15), e -> fetchTelemetry(null))
+        );
+        globalTelemetryTimeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        globalTelemetryTimeline.play();
+        fetchTelemetry(null);
     }
 
     private void updateMainView(String tab, HBox actions, StackPane container) {
@@ -453,18 +494,54 @@ public class MiniCloudFxApp extends Application {
         actions.getChildren().add(refreshBtn);
 
         switch (tab) {
-            case "EC2": setupInstancesView(actions, container, refreshBtn); break;
-            case "RDS": setupDatabasesView(actions, container, refreshBtn); break;
-            case "S3": setupBucketsView(actions, container, refreshBtn); break;
-            case "VPC": setupVpcView(actions, container, refreshBtn); break;
+            case "EC2":
+            case "Instances": setupInstancesView(actions, container, refreshBtn); break;
+            
+            case "RDS":
+            case "Databases": setupDatabasesView(actions, container, refreshBtn); break;
+            
+            case "DynamoDB":
+            case "Tables": setupDynamoDbView(actions, container, refreshBtn); break;
+            
+            case "S3":
+            case "Buckets": setupBucketsView(actions, container, refreshBtn); break;
+            
+            case "Lambda":
+            case "Functions": setupLambdaView(actions, container, refreshBtn); break;
+            
+            case "SNS":
+            case "Topics": setupSnsView(actions, container, refreshBtn); break;
+            
+            case "SQS":
+            case "Queues": setupSqsView(actions, container, refreshBtn); break;
+            
+            case "VPC":
+            case "Your VPCs": setupVpcView(actions, container, refreshBtn); break;
             case "Subnets": setupSubnetView(actions, container, refreshBtn); break;
-            case "Route 53": setupRoute53View(actions, container, refreshBtn); break;
-            case "CloudFormation": setupCloudFormationView(actions, container, refreshBtn); break;
-            case "WAF": setupWafView(actions, container, refreshBtn); break;
-            case "Security Hub": setupGuardDutyView(actions, container, refreshBtn); break;
-            case "IAM": setupUsersView(actions, container, refreshBtn); break;
-            case "Billing": setupBillingView(actions, container, refreshBtn); break;
+            
+            case "Route 53":
+            case "Hosted Zones": setupRoute53View(actions, container, refreshBtn); break;
+            
+            case "CloudFormation":
+            case "Stacks": setupCloudFormationView(actions, container, refreshBtn); break;
+            
+            case "WAF":
+            case "WAF Rules": setupWafView(actions, container, refreshBtn); break;
+            
+            case "Security Hub":
+            case "GuardDuty Findings": setupGuardDutyView(actions, container, refreshBtn); break;
+            
+            case "IAM":
+            case "IAM Groups": setupUsersView(actions, container, refreshBtn); break;
+            
+            case "Billing":
+            case "Cost Explorer": setupBillingView(actions, container, refreshBtn); break;
+            
             case "My Account": setupAccountView(container); break;
+            
+            case "Security Groups": 
+            case "VPC Security Groups": setupSecurityGroupsView(actions, container, refreshBtn); break;
+            
             default:
                 Label placeholder = new Label("Coming Soon: " + tab);
                 placeholder.setTextFill(Color.GRAY);
@@ -526,6 +603,80 @@ public class MiniCloudFxApp extends Application {
         grid.add(securityStatus, 1, 0);
         grid.add(health, 0, 1);
         grid.add(billing, 1, 1);
+
+        // Widget 5: Host Performance (Live Graphs)
+        VBox perfWidget = createWidget("Local Host Infrastructure", "Real-time CPU and RAM utilization");
+        perfWidget.setMinHeight(250);
+        
+        NumberAxis xAxis = new NumberAxis();
+        xAxis.setForceZeroInRange(false);
+        xAxis.setAutoRanging(false);
+        xAxis.setTickLabelsVisible(false);
+        xAxis.setOpacity(0);
+        
+        NumberAxis yAxis = new NumberAxis(0, 100, 10);
+        yAxis.setLabel("Utilization %");
+        
+        AreaChart<Number, Number> chart = new AreaChart<>(xAxis, yAxis);
+        chart.setAnimated(false);
+        chart.setCreateSymbols(false);
+        chart.setLegendVisible(true);
+        chart.setPrefHeight(200);
+        
+        XYChart.Series<Number, Number> cpuSeries = new XYChart.Series<>();
+        cpuSeries.setName("Host CPU Load");
+        XYChart.Series<Number, Number> ramSeries = new XYChart.Series<>();
+        ramSeries.setName("Host RAM Usage");
+        
+        chart.getData().addAll(cpuSeries, ramSeries);
+        perfWidget.getChildren().add(chart);
+        
+        grid.add(perfWidget, 0, 2, 2, 1); // Spanning two columns
+        
+        final long[] timeCount = {0};
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(javafx.util.Duration.seconds(1), ev -> {
+                double cpuLoad = 0;
+                double ramLoad = 0;
+                try {
+                    java.lang.management.OperatingSystemMXBean osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+                    if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
+                        com.sun.management.OperatingSystemMXBean sunOsBean = (com.sun.management.OperatingSystemMXBean) osBean;
+                        double processCpu = sunOsBean.getCpuLoad();
+                        cpuLoad = processCpu < 0 ? 0 : processCpu * 100;
+                        long totalMem = sunOsBean.getTotalMemorySize();
+                        long freeMem = sunOsBean.getFreeMemorySize();
+                        ramLoad = ((double) (totalMem - freeMem) / totalMem) * 100;
+                    } else {
+                        double sysLoad = osBean.getSystemLoadAverage();
+                        cpuLoad = sysLoad < 0 ? new java.util.Random().nextDouble() * 10 + 5 : sysLoad * 100;
+                        Runtime rt = Runtime.getRuntime();
+                        ramLoad = ((double) (rt.totalMemory() - rt.freeMemory()) / rt.totalMemory()) * 100;
+                    }
+                } catch (Exception ex) {
+                    Runtime rt = Runtime.getRuntime();
+                    ramLoad = ((double) (rt.totalMemory() - rt.freeMemory()) / rt.totalMemory()) * 100;
+                    cpuLoad = new java.util.Random().nextDouble() * 10 + 5;
+                }
+                
+                timeCount[0]++;
+                cpuSeries.getData().add(new XYChart.Data<>(timeCount[0], cpuLoad));
+                ramSeries.getData().add(new XYChart.Data<>(timeCount[0], ramLoad));
+                
+                xAxis.setLowerBound(timeCount[0] - 60);
+                xAxis.setUpperBound(timeCount[0] + 5);
+                
+                if (cpuSeries.getData().size() > 65) cpuSeries.getData().remove(0);
+                if (ramSeries.getData().size() > 65) ramSeries.getData().remove(0);
+            })
+        );
+        timeline.setCycleCount(javafx.animation.Animation.INDEFINITE);
+        timeline.play();
+        
+        if (this.autoRefreshTimeline != null) {
+            this.autoRefreshTimeline.stop();
+        }
+        this.autoRefreshTimeline = timeline;
 
         container.getChildren().add(grid);
     }
@@ -592,7 +743,21 @@ public class MiniCloudFxApp extends Application {
                 showDetails(val.name, info);
             }
         });
-        container.getChildren().add(table);
+        
+        GridPane metricsGrid = new GridPane();
+        metricsGrid.setHgap(15);
+        metricsGrid.setVgap(15);
+        metricsGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox t1 = createWidget("Resources", "Total instances: " + getTelemetry("totalInstances", "0") + "\nVolumes: " + getTelemetry("totalVolumes", "0"));
+        VBox t2 = createWidget("Instance Health", "Running instances: 0");
+        VBox t3 = createWidget("Network & Security", "Elastic IPs: " + getTelemetry("elasticIps", "1") + "\nSecurity Groups: " + getTelemetry("securityGroups", "1"));
+        VBox t4 = createWidget("Key Pairs", "Active: " + getTelemetry("keyPairs", "1"));
+        
+        metricsGrid.addRow(0, t1, t2, t3, t4);
+        VBox contentBox = new VBox(metricsGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(contentBox);
 
         Button terminateBtn = new Button("Terminate Instance");
         styleActionBtn(terminateBtn, false);
@@ -608,10 +773,16 @@ public class MiniCloudFxApp extends Application {
                             getJsonValue(item, "id"),
                             getJsonValue(item, "status"),
                             getJsonValue(item, "instanceType"),
-                            getJsonValue(item, "publicIp")
+                            getJsonValue(item, "publicIp"),
+                            getJsonValue(item, "hostPort")
                         ));
                     }
                 }
+                Platform.runLater(() -> {
+                    ((Label)t1.getChildren().get(1)).setText("Total instances: " + table.getItems().size() + "\nVolumes: " + getTelemetry("totalVolumes", "0"));
+                    long running = table.getItems().stream().filter(r -> "RUNNING".equals(((InstanceRow)r).state)).count();
+                    ((Label)t2.getChildren().get(1)).setText("Running instances: " + running);
+                });
             });
         };
 
@@ -666,7 +837,21 @@ public class MiniCloudFxApp extends Application {
                 showDetails(val.id, info);
             }
         });
-        container.getChildren().add(table);
+        
+        GridPane dbMetricsGrid = new GridPane();
+        dbMetricsGrid.setHgap(15);
+        dbMetricsGrid.setVgap(15);
+        dbMetricsGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox dt1 = createWidget("DB Instances", "Active DBs: 0");
+        VBox dt2 = createWidget("Storage", "Allocated (GB): " + getTelemetry("usedStorageTb", "20"));
+        VBox dt3 = createWidget("Snapshots", "Automated: " + getTelemetry("automatedBackups", "5"));
+        VBox dt4 = createWidget("Engines", "MySQL / PostgreSQL");
+        
+        dbMetricsGrid.addRow(0, dt1, dt2, dt3, dt4);
+        VBox dbContentBox = new VBox(dbMetricsGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(dbContentBox);
 
         Button deleteBtn = new Button("Delete Database");
         styleActionBtn(deleteBtn, false);
@@ -685,6 +870,9 @@ public class MiniCloudFxApp extends Application {
                         ));
                     }
                 }
+                Platform.runLater(() -> {
+                    ((Label)dt1.getChildren().get(1)).setText("Active DBs: " + table.getItems().size());
+                });
             });
         };
         
@@ -695,6 +883,168 @@ public class MiniCloudFxApp extends Application {
         styleActionBtn(refreshBtn, false);
         refresh.run();
         addAutoRefreshToggle(actions, refresh);
+    }
+
+    private void setupDynamoDbView(HBox actions, StackPane container, Button refreshBtn) {
+        Button createBtn = new Button("Create table");
+        styleActionBtn(createBtn, true);
+        createBtn.setOnAction(e -> handleCreateDynamo());
+        actions.getChildren().add(0, createBtn);
+
+        TableView<DynamoTableRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        table.getColumns().addAll(
+            createCol("Table name", "name"),
+            createCol("Status", "status"),
+            createCol("Partition key", "partitionKey"),
+            createCol("Sort key", "sortKey")
+        );
+
+        table.setRowFactory(tv -> {
+            TableRow<DynamoTableRow> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    DynamoTableRow data = row.getItem();
+                    showDynamoDetails(data.name);
+                }
+            });
+            return row;
+        });
+
+        GridPane dGrid = new GridPane();
+        dGrid.setHgap(15);
+        dGrid.setVgap(15);
+        dGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox t1 = createWidget("Tables", "Active tables: 0");
+        VBox t2 = createWidget("Capacity totals", "Read capacity: 25\nWrite capacity: 25");
+        VBox t3 = createWidget("Global secondary indexes", "Active: 0");
+        VBox t4 = createWidget("DAX Clusters", "Running: 0");
+        
+        dGrid.addRow(0, t1, t2, t3, t4);
+        VBox contentBox = new VBox(dGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(contentBox);
+
+        Runnable refresh = () -> {
+            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/dynamodb/tables"))
+                .header("Authorization", "Bearer " + jwtToken).GET().build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> {
+                    table.getItems().clear();
+                    if(res.statusCode() == 200) {
+                        for (String item : res.body().split("\\{")) {
+                            if (item.contains("\"tableName\"")) {
+                                table.getItems().add(new DynamoTableRow(
+                                    getJsonValue(item, "tableName"),
+                                    getJsonValue(item, "status"),
+                                    getJsonValue(item, "partitionKey"),
+                                    getJsonValue(item, "sortKey")
+                                ));
+                            }
+                        }
+                    }
+                    ((Label)t1.getChildren().get(1)).setText("Active tables: " + table.getItems().size());
+                });
+            });
+        };
+
+        refreshBtn.setOnAction(e -> refresh.run());
+        styleActionBtn(refreshBtn, false);
+        refresh.run();
+        addAutoRefreshToggle(actions, refresh);
+    }
+    
+    private void handleCreateDynamo() {
+        VBox vb = new VBox(15);
+        vb.setPadding(new Insets(20));
+        vb.setMinWidth(450);
+
+        TextField nameFd = new TextField("Animals");
+        TextField pkFd = new TextField("Species");
+        TextField skFd = new TextField("");
+        skFd.setPromptText("Optional");
+
+        vb.getChildren().addAll(
+            new Label("Table details\nTable name"), nameFd,
+            new Label("Partition key"), pkFd,
+            new Label("Sort key (Optional)"), skFd
+        );
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Create DynamoDB table");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(vb);
+
+        dialog.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                try {
+                    String body = String.format("{\"tableName\":\"%s\", \"partitionKey\":\"%s\", \"sortKey\":\"%s\"}", 
+                        nameFd.getText(), pkFd.getText(), skFd.getText());
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(API_BASE + "/dynamodb/table"))
+                            .header("Authorization", "Bearer " + jwtToken)
+                            .header("Content-Type", "application/json")
+                            .POST(HttpRequest.BodyPublishers.ofString(body))
+                            .build();
+                    httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+                } catch(Exception e) {}
+            }
+        });
+    }
+
+    private void showDynamoDetails(String tableName) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("DynamoDB Table: " + tableName);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        
+        VBox box = new VBox(15);
+        box.setPadding(new Insets(20));
+        box.setMinWidth(500);
+        
+        HBox queryArea = new HBox(10);
+        TextField searchFd = new TextField();
+        searchFd.setPromptText("Enter Partition Key value");
+        Button getBtn = new Button("Query / Get");
+        styleActionBtn(getBtn, true);
+        queryArea.getChildren().addAll(searchFd, getBtn);
+        
+        TextArea resArea = new TextArea();
+        resArea.setEditable(false);
+        resArea.setPrefRowCount(10);
+        
+        HBox putArea = new HBox(10);
+        TextField putKey = new TextField(); putKey.setPromptText("Key");
+        TextField putVal = new TextField(); putVal.setPromptText("String Value");
+        Button putBtn = new Button("Put Item");
+        styleActionBtn(putBtn, false);
+        putArea.getChildren().addAll(putKey, putVal, putBtn);
+        
+        getBtn.setOnAction(e -> {
+            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/dynamodb/table/" + tableName + "/item/" + searchFd.getText()))
+                .header("Authorization", "Bearer " + jwtToken).GET().build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> {
+                    resArea.setText(res.statusCode() == 200 ? res.body() : "Item not found or error.");
+                });
+            });
+        });
+        
+        putBtn.setOnAction(e -> {
+            String body = String.format("{\"key\":\"%s\", \"value\":\"%s\"}", putKey.getText(), putVal.getText());
+            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/dynamodb/table/" + tableName + "/item"))
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body)).build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> resArea.setText("Successfully put item."));
+            });
+        });
+
+        box.getChildren().addAll(new Label("Explore Items"), queryArea, resArea, new Separator(), new Label("Insert Item"), putArea);
+        dialog.getDialogPane().setContent(box);
+        dialog.showAndWait();
     }
 
     private void setupBucketsView(HBox actions, StackPane container, Button refreshBtn) {
@@ -715,7 +1065,10 @@ public class MiniCloudFxApp extends Application {
         TableColumn<BucketRow, String> accessCol = new TableColumn<>("Access");
         accessCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().access));
 
-        table.getColumns().addAll(nameCol, regionCol, accessCol);
+        TableColumn<BucketRow, String> websiteCol = new TableColumn<>("Website");
+        websiteCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().website));
+
+        table.getColumns().addAll(nameCol, regionCol, accessCol, websiteCol);
         
         Button openBtn = new Button("Open Bucket");
         styleActionBtn(openBtn, false);
@@ -732,7 +1085,21 @@ public class MiniCloudFxApp extends Application {
                 showDetails(val.name, info);
             }
         });
-        container.getChildren().add(table);
+        
+        GridPane s3Grid = new GridPane();
+        s3Grid.setHgap(15);
+        s3Grid.setVgap(15);
+        s3Grid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox st1 = createWidget("Storage Lens", "Total Buckets: 0");
+        VBox st2 = createWidget("Total Storage", "Used: " + getTelemetry("usedStorageTb", "0") + " TB");
+        VBox st3 = createWidget("Security", "Public Contexts: 0");
+        VBox st4 = createWidget("Transfer Stats", "Requests: " + getTelemetry("transferRequests", "1000"));
+        
+        s3Grid.addRow(0, st1, st2, st3, st4);
+        VBox s3Content = new VBox(s3Grid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(s3Content);
 
         Button deleteBtn = new Button("Delete Bucket");
         styleActionBtn(deleteBtn, false);
@@ -743,13 +1110,20 @@ public class MiniCloudFxApp extends Application {
                 table.getItems().clear();
                 for (String item : res.split("\\{")) {
                     if (item.contains("\"name\"")) {
+                        String ws = getJsonValue(item, "websiteEnabled").equals("true") ? "Active" : "Disabled";
                         table.getItems().add(new BucketRow(
                             getJsonValue(item, "name"),
                             getJsonValue(item, "region"),
-                            getJsonValue(item, "accessControl")
+                            getJsonValue(item, "accessControl"),
+                            ws
                         ));
                     }
                 }
+                Platform.runLater(() -> {
+                    ((Label)st1.getChildren().get(1)).setText("Total Buckets: " + table.getItems().size());
+                    long publicCount = table.getItems().stream().filter(b -> b.access != null && b.access.toLowerCase().contains("public")).count();
+                    ((Label)st3.getChildren().get(1)).setText("Public Contexts: " + publicCount);
+                });
             });
         };
 
@@ -807,17 +1181,36 @@ public class MiniCloudFxApp extends Application {
         };
 
         createIamBtn.setOnAction(e -> {
-            TextInputDialog d = new TextInputDialog("new-user");
-            d.setTitle("Create IAM User");
-            d.setHeaderText("Specify IAM Username");
-            d.showAndWait().ifPresent(name -> {
-                HttpRequest postReq = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE + "/auth/iam/create?iamUsername=" + name + "&password=password123"))
-                    .header("Authorization", "Bearer " + jwtToken)
-                    .POST(HttpRequest.BodyPublishers.noBody()).build();
-                httpClient.sendAsync(postReq, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
-                    Platform.runLater(refreshUsers);
-                });
+            VBox vb = new VBox(15);
+            vb.setPadding(new Insets(20));
+            TextField nameFd = new TextField();
+            nameFd.setPromptText("iam-user-name");
+            PasswordField passFd = new PasswordField();
+            passFd.setPromptText("Console password");
+            
+            CheckBox adminCb = new CheckBox("Add user to 'Administrators' group");
+            adminCb.setSelected(true);
+            
+            vb.getChildren().addAll(new Label("User name"), nameFd, new Label("Console password"), passFd, adminCb);
+            
+            Dialog<ButtonType> d = new Dialog<>();
+            d.setTitle("Add User");
+            d.setHeaderText("Step 1: Specify user details");
+            d.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            d.getDialogPane().setContent(vb);
+            
+            d.showAndWait().ifPresent(bt -> {
+                if (bt == ButtonType.OK) {
+                    String name = nameFd.getText();
+                    String pwd = passFd.getText().isEmpty() ? "password123" : passFd.getText();
+                    HttpRequest postReq = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/auth/iam/create?iamUsername=" + name + "&password=" + pwd))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .POST(HttpRequest.BodyPublishers.noBody()).build();
+                    httpClient.sendAsync(postReq, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
+                        Platform.runLater(refreshUsers);
+                    });
+                }
             });
         });
 
@@ -881,7 +1274,18 @@ public class MiniCloudFxApp extends Application {
         TableView<VpcRow> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getColumns().addAll(createCol("VPC ID", "id"), createCol("Name", "name"), createCol("IPv4 CIDR", "cidr"), createCol("Status", "status"));
-        container.getChildren().add(table);
+        
+        GridPane vpcGrid = new GridPane();
+        vpcGrid.setHgap(15); vpcGrid.setVgap(15); vpcGrid.setPadding(new Insets(0, 0, 15, 0));
+        VBox vt1 = createWidget("Your VPCs", "Total: 0");
+        VBox vt2 = createWidget("Subnets", "Available: " + getTelemetry("subnets", "0"));
+        VBox vt3 = createWidget("Internet Gateways", "Attached: 1");
+        VBox vt4 = createWidget("VPC Peering", "Connections: 0");
+        vpcGrid.addRow(0, vt1, vt2, vt3, vt4);
+        VBox content = new VBox(vpcGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(content);
+
         Runnable refresh = () -> {
             fetchList("/vpc/list", res -> {
                 table.getItems().clear();
@@ -895,6 +1299,7 @@ public class MiniCloudFxApp extends Application {
                         ));
                     }
                 }
+                Platform.runLater(() -> { ((Label)vt1.getChildren().get(1)).setText("Total: " + table.getItems().size()); });
             });
         };
         refreshBtn.setOnAction(e -> refresh.run());
@@ -922,13 +1327,25 @@ public class MiniCloudFxApp extends Application {
         TableView<DnsRow> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         table.getColumns().addAll(createCol("Hosted Zone ID", "id"), createCol("Domain Name", "name"), createCol("Type", "type"));
-        container.getChildren().add(table);
+        
+        GridPane r53Grid = new GridPane();
+        r53Grid.setHgap(15); r53Grid.setVgap(15); r53Grid.setPadding(new Insets(0, 0, 15, 0));
+        VBox r1 = createWidget("Hosted Zones", "Total: 0");
+        VBox r2 = createWidget("Health Checks", "Healthy: " + getTelemetry("domains", "0"));
+        VBox r3 = createWidget("Traffic Policies", "Active: 1");
+        VBox r4 = createWidget("Domains", "Registered: " + getTelemetry("domains", "0"));
+        r53Grid.addRow(0, r1, r2, r3, r4);
+        VBox r53Content = new VBox(r53Grid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+        container.getChildren().add(r53Content);
+
         Runnable refresh = () -> {
             fetchList("/dns/zones", res -> {
                 table.getItems().clear();
                 for (String item : res.split("\\{")) if (item.contains("\"name\"")) {
                     table.getItems().add(new DnsRow(getJsonValue(item, "id"), getJsonValue(item, "name"), "Public", ""));
                 }
+                Platform.runLater(() -> { ((Label)r1.getChildren().get(1)).setText("Total: " + table.getItems().size()); });
             });
         };
         refreshBtn.setOnAction(e -> refresh.run());
@@ -1023,9 +1440,10 @@ public class MiniCloudFxApp extends Application {
     }
 
     // --- Row Models ---
-    public static class InstanceRow { public String name, id, state, type, publicIp; public InstanceRow(String n, String i, String s, String t, String ip) { name=n; id=i; state=s; type=t; publicIp=ip; } }
+    public static class InstanceRow { public String name, id, state, type, publicIp, hostPort; public InstanceRow(String n, String i, String s, String t, String ip, String hp) { name=n; id=i; state=s; type=t; publicIp=ip; hostPort=hp; } }
     public static class DatabaseRow { public String id, engine, status, dbClass; public DatabaseRow(String i, String e, String s, String c) { id=i; engine=e; status=s; dbClass=c; } }
-    public static class BucketRow { public String name, region, access; public BucketRow(String n, String r, String a) { name=n; region=r; access=a; } }
+    public static class DynamoTableRow { public String name, status, partitionKey, sortKey; public DynamoTableRow(String n, String s, String pk, String sk) { name=n; status=s; partitionKey=pk; sortKey=sk; } }
+    public static class BucketRow { public String name, region, access, website; public BucketRow(String n, String r, String a, String w) { name=n; region=r; access=a; website=w; } }
     public static class UserRow { public String name, accountId, mfa; public UserRow(String n, String i, String m) { name=n; accountId=i; mfa=m; } }
     public static class BillingRow { public String resource, type, cost; public BillingRow(String r, String t, String c) { resource=r; type=t; cost=c; } }
     public static class VpcRow { public String id, name, cidr, status; public VpcRow(String i, String n, String c, String s) { id=i; name=n; cidr=c; status=s; } }
@@ -1038,54 +1456,172 @@ public class MiniCloudFxApp extends Application {
 
 
     private void handleLaunchEC2(Runnable onComplete) {
-        TextInputDialog dialog = new TextInputDialog("my-instance");
-        dialog.setTitle("Launch EC2 Instance");
-        dialog.setHeaderText("Specify Instance Name");
-        dialog.showAndWait().ifPresent(name -> {
-            String body = String.format("{\"instanceName\":\"%s\", \"instanceType\":\"t2.micro\", \"vpcId\":\"vpc-default\", \"subnetId\":\"subnet-default\"}", name);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE + "/compute/launch"))
-                    .header("Authorization", "Bearer " + jwtToken)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                if (onComplete != null) Platform.runLater(onComplete);
+        VBox vb = new VBox(15);
+        vb.setPadding(new Insets(20));
+        vb.setMinWidth(400);
+
+        TextField nameFd = new TextField("my-web-server");
+        ComboBox<String> amiBox = new ComboBox<>();
+        amiBox.getItems().addAll("Amazon Linux 2023 (ami-0c55b159)", "Ubuntu 22.04 LTS (ami-07d9b9d1)", "Red Hat Enterprise Linux 9 (ami-0fe472d8)");
+        amiBox.setValue(amiBox.getItems().get(0));
+
+        ComboBox<String> typeBox = new ComboBox<>();
+        typeBox.getItems().addAll("t2.micro (1 vCPU, 1 GiB RAM)", "t2.small (1 vCPU, 2 GiB RAM)", "t2.medium (2 vCPU, 4 GiB RAM)", "t3.large (2 vCPU, 8 GiB RAM)");
+        typeBox.setValue(typeBox.getItems().get(0));
+
+        ComboBox<String> regionBox = new ComboBox<>();
+        regionBox.getItems().addAll("us-east-1", "us-west-2", "eu-west-1", "ap-south-1");
+        regionBox.setValue("us-east-1");
+
+        ComboBox<String> vpcBox = new ComboBox<>();
+        vpcBox.getItems().add("vpc-default (172.31.0.0/16)");
+        vpcBox.setValue("vpc-default (172.31.0.0/16)");
+
+        vb.getChildren().addAll(
+            new Label("Name and tags"), nameFd,
+            new Label("Application and OS Images (Amazon Machine Image)"), amiBox,
+            new Label("Instance type"), typeBox,
+            new Label("Region"), regionBox,
+            new Label("VPC"), vpcBox
+        );
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Launch an instance");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(vb);
+        
+        // Fetch real VPCs to make it better
+        fetchList("/vpc/list", res -> {
+            Platform.runLater(() -> {
+                vpcBox.getItems().clear();
+                for (String item : res.split("\\{")) if (item.contains("\"id\"")) {
+                    vpcBox.getItems().add(getJsonValue(item, "id") + " (" + getJsonValue(item, "cidrBlock") + ")");
+                }
+                if (!vpcBox.getItems().isEmpty()) vpcBox.setValue(vpcBox.getItems().get(0));
+                else vpcBox.getItems().add("vpc-default");
             });
+        });
+
+        dialog.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                String name = nameFd.getText();
+                String type = typeBox.getValue().split(" ")[0];
+                String vpc = vpcBox.getValue().split(" ")[0];
+                String region = regionBox.getValue();
+                String ami = amiBox.getValue().split("\\(")[1].replace(")", "");
+
+                String body = String.format("{\"instanceName\":\"%s\", \"instanceType\":\"%s\", \"region\":\"%s\", \"vpcId\":\"%s\", \"subnetId\":\"subnet-default\", \"amiId\":\"%s\"}", 
+                                           name, type, region, vpc, ami);
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/compute/launch"))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body))
+                        .build();
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                    if (onComplete != null) Platform.runLater(onComplete);
+                });
+            }
         });
     }
 
     private void handleCreateRDS(Runnable onComplete) {
-        TextInputDialog nameDialog = new TextInputDialog("my-db");
-        nameDialog.setTitle("Create RDS Database");
-        nameDialog.setHeaderText("Database Name");
-        nameDialog.showAndWait().ifPresent(name -> {
-            String body = String.format("{\"name\":\"%s\", \"dbName\":\"%s_db\", \"rootPassword\":\"password\", \"engine\":\"mysql\", \"vpcId\":\"vpc-default\", \"subnetId\":\"subnet-default\"}", name, name);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE + "/database/provision"))
-                    .header("Authorization", "Bearer " + jwtToken)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                if (onComplete != null) Platform.runLater(onComplete);
+        VBox vb = new VBox(15);
+        vb.setPadding(new Insets(20));
+        vb.setMinWidth(450);
+
+        TextField nameFd = new TextField("database-1");
+        ComboBox<String> engineBox = new ComboBox<>();
+        engineBox.getItems().addAll("MySQL 8.0.35", "PostgreSQL 16.1", "MariaDB 10.11", "Oracle 19c");
+        engineBox.setValue("MySQL 8.0.35");
+
+        ComboBox<String> classBox = new ComboBox<>();
+        classBox.getItems().addAll("db.t3.micro (2 vCPU, 1 GiB)", "db.t3.small (2 vCPU, 2 GiB)", "db.m5.large (2 vCPU, 8 GiB)");
+        classBox.setValue("db.t3.micro (2 vCPU, 1 GiB)");
+
+        PasswordField passFd = new PasswordField();
+        passFd.setPromptText("Master password");
+
+        ComboBox<String> vpcBox = new ComboBox<>();
+        vpcBox.getItems().add("vpc-default");
+        vpcBox.setValue("vpc-default");
+
+        vb.getChildren().addAll(
+            new Label("DB instance identifier"), nameFd,
+            new Label("Engine options"), engineBox,
+            new Label("Instance configuration"), classBox,
+            new Label("Master password"), passFd,
+            new Label("Connectivity (VPC)"), vpcBox
+        );
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Create database");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(vb);
+        
+        fetchList("/vpc/list", res -> {
+            Platform.runLater(() -> {
+                vpcBox.getItems().clear();
+                for (String item : res.split("\\{")) if (item.contains("\"id\"")) {
+                    vpcBox.getItems().add(getJsonValue(item, "id"));
+                }
+                if (!vpcBox.getItems().isEmpty()) vpcBox.setValue(vpcBox.getItems().get(0));
             });
+        });
+
+        dialog.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                String name = nameFd.getText();
+                String engine = engineBox.getValue().split(" ")[0].toLowerCase();
+                String dbClass = classBox.getValue().split(" ")[0];
+                String pwd = passFd.getText().isEmpty() ? "password" : passFd.getText();
+
+                String body = String.format("{\"name\":\"%s\", \"dbName\":\"%s_db\", \"rootPassword\":\"%s\", \"engine\":\"%s\", \"dbInstanceClass\":\"%s\", \"vpcId\":\"%s\", \"subnetId\":\"subnet-default\"}", 
+                                           name, name, pwd, engine, dbClass, vpcBox.getValue());
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/database/provision"))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(body))
+                        .build();
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                    if (onComplete != null) Platform.runLater(onComplete);
+                });
+            }
         });
     }
 
     private void handleCreateS3(Runnable onComplete) {
-        TextInputDialog dialog = new TextInputDialog("my-bucket");
-        dialog.setTitle("Create S3 Bucket");
-        dialog.setHeaderText("Bucket Name");
-        dialog.showAndWait().ifPresent(name -> {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE + "/buckets?name=" + name))
-                    .header("Authorization", "Bearer " + jwtToken)
-                    .POST(HttpRequest.BodyPublishers.noBody())
-                    .build();
-            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                if (onComplete != null) Platform.runLater(onComplete);
-            });
+        VBox vb = new VBox(15);
+        vb.setPadding(new Insets(20));
+        
+        TextField nameFd = new TextField("");
+        nameFd.setPromptText("my-bucket-name");
+        
+        ComboBox<String> regionBox = new ComboBox<>();
+        regionBox.getItems().addAll("us-east-1 (N. Virginia)", "us-west-2 (Oregon)", "eu-west-1 (Ireland)", "ap-south-1 (Mumbai)");
+        regionBox.setValue("us-east-1 (N. Virginia)");
+        
+        vb.getChildren().addAll(new Label("Bucket name"), nameFd, new Label("AWS Region"), regionBox);
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Create bucket");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(vb);
+        
+        dialog.showAndWait().ifPresent(bt -> {
+            if (bt == ButtonType.OK) {
+                String name = nameFd.getText();
+                String region = regionBox.getValue().split(" ")[0];
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/buckets?name=" + name + "&region=" + region))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+                httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                    if (onComplete != null) Platform.runLater(onComplete);
+                });
+            }
         });
     }
 
@@ -1181,6 +1717,8 @@ public class MiniCloudFxApp extends Application {
         GridPane grid = new GridPane();
         grid.setHgap(20); grid.setVgap(10);
 
+        String[] sparts = selectedItem.split(" \\| ");
+
         if (selectedItem.contains("ID: ")) {
             String namePart = selectedItem.split(" [\\(\\[|]")[0];
             String id = selectedItem.split("ID: ")[1];
@@ -1199,7 +1737,6 @@ public class MiniCloudFxApp extends Application {
                 addGridRow(grid, 4, "Class:", selectedItem.split("\\| ")[1]);
             }
         } else if ("Storage".equals(currentTab)) {
-            String[] sparts = selectedItem.split(" \\| ");
             header.setText("S3 Bucket: " + sparts[0]);
             addGridRow(grid, 0, "Region:", sparts[1]);
             addGridRow(grid, 1, "Access:", sparts[2]);
@@ -1207,6 +1744,25 @@ public class MiniCloudFxApp extends Application {
         }
 
         box.getChildren().addAll(header, new Separator(), grid);
+        
+        if ("Compute".equals(currentTab) || "Storage".equals(currentTab)) {
+            Button openBtn = new Button("\uD83C\uDF10 Open Website");
+            styleActionBtn(openBtn, true);
+            openBtn.setMaxWidth(Double.MAX_VALUE);
+            openBtn.setOnAction(e -> {
+                String url = "";
+                if ("Compute".equals(currentTab)) {
+                    // Try to find the host port from the grid or selected item
+                    String port = selectedItem.contains("Port: ") ? selectedItem.split("Port: ")[1].split("\\|")[0].trim() : "8081";
+                    url = "http://localhost:" + port;
+                } else {
+                    url = API_BASE + "/buckets/public/" + sparts[0] + "/index.html";
+                }
+                getHostServices().showDocument(url);
+            });
+            box.getChildren().add(openBtn);
+        }
+
         dialog.getDialogPane().setContent(box);
         dialog.showAndWait();
     }
@@ -1279,6 +1835,65 @@ public class MiniCloudFxApp extends Application {
         HBox.setHgrow(top.getChildren().get(1), Priority.ALWAYS);
         
         detailsPane.getChildren().addAll(top, new Separator(), grid);
+
+        if (title.toLowerCase().contains("bucket") || currentTab.equals("Storage")) {
+            VBox websiteBox = new VBox(10);
+            websiteBox.setPadding(new Insets(10, 0, 0, 0));
+            Label wsLabel = new Label("Static website hosting");
+            wsLabel.getStyleClass().add("details-label");
+            
+            Button enableWsBtn = new Button("Enable bucket hosting");
+            styleActionBtn(enableWsBtn, false);
+            enableWsBtn.setOnAction(e -> handleEnableWebsite(title.replace(" details", "").trim()));
+            
+            websiteBox.getChildren().addAll(wsLabel, enableWsBtn);
+            detailsPane.getChildren().add(websiteBox);
+        } else if (currentTab.equals("Compute") || title.toLowerCase().contains("instance")) {
+            Button browseBtn = new Button("\u2197 Browse Website");
+            browseBtn.getStyleClass().add("btn-orange");
+            browseBtn.setOnAction(e -> {
+                String port = data.getOrDefault("Host Port", "8080");
+                getHostServices().showDocument("http://localhost:" + port);
+            });
+            detailsPane.getChildren().add(new VBox(10, new Separator(), browseBtn));
+        }
+    }
+
+    private void handleEnableWebsite(String bucketName) {
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.setTitle("Enable Static Website Hosting");
+        dialog.setHeaderText("Configure hosting for " + bucketName);
+        
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        
+        TextField indexField = new TextField("index.html");
+        TextField errorField = new TextField("error.html");
+        
+        grid.add(new Label("Index Document:"), 0, 0); grid.add(indexField, 1, 0);
+        grid.add(new Label("Error Document:"), 0, 1); grid.add(errorField, 1, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/buckets/" + bucketName + "/website?indexDocument=" + java.net.URLEncoder.encode(indexField.getText(), "UTF-8") + "&errorDocument=" + java.net.URLEncoder.encode(errorField.getText(), "UTF-8")))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .POST(HttpRequest.BodyPublishers.noBody()).build();
+                    httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                        Platform.runLater(() -> {
+                            new Alert(Alert.AlertType.INFORMATION, "Static website hosting enabled for " + bucketName).show();
+                        });
+                    });
+                } catch(Exception ex) { ex.printStackTrace(); }
+            }
+            return true;
+        });
+        dialog.showAndWait();
     }
 
     private void addGridRow(GridPane grid, int row, String labelText, String valueText) {
@@ -1326,6 +1941,356 @@ public class MiniCloudFxApp extends Application {
         autoRefreshTimeline.play();
         
         actions.getChildren().add(cb);
+    }
+
+    private void setupLambdaView(HBox actions, StackPane container, Button refreshBtn) {
+        Button createBtn = new Button("Create Function");
+        styleActionBtn(createBtn, true);
+        createBtn.setOnAction(e -> handleCreateLambda());
+        actions.getChildren().add(0, createBtn);
+
+        Button invokeBtn = new Button("Invoke");
+        styleActionBtn(invokeBtn, false);
+        actions.getChildren().add(1, invokeBtn);
+
+        TableView<LambdaFunctionRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        TableColumn<LambdaFunctionRow, String> nameCol = new TableColumn<>("Function Name");
+        nameCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().name));
+        
+        TableColumn<LambdaFunctionRow, String> runtimeCol = new TableColumn<>("Runtime");
+        runtimeCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().runtime));
+        
+        TableColumn<LambdaFunctionRow, String> handlerCol = new TableColumn<>("Handler");
+        handlerCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().handler));
+
+        table.getColumns().addAll(nameCol, runtimeCol, handlerCol);
+        
+        GridPane lambdaGrid = new GridPane();
+        lambdaGrid.setHgap(15);
+        lambdaGrid.setVgap(15);
+        lambdaGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox lt1 = createWidget("Functions", "Total Functions: 0");
+        VBox lt2 = createWidget("Invocations", "Last 30 Days: " + getTelemetry("invocations30d", "0"));
+        VBox lt3 = createWidget("Performance", "Error Rate: " + getTelemetry("errorRate", "0.0") + "%\nAvg Duration: " + getTelemetry("avgDurationMs", "100") + "ms");
+        VBox lt4 = createWidget("Concurrency", "Reserved: 1000");
+        
+        lambdaGrid.addRow(0, lt1, lt2, lt3, lt4);
+        VBox lambdaContent = new VBox(lambdaGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        Runnable refresh = () -> {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/compute/lambda"))
+                .header("Authorization", "Bearer " + jwtToken)
+                .GET().build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> {
+                    table.getItems().clear();
+                    if (res.statusCode() == 200) {
+                        for (String item : res.body().split("\\{")) {
+                            if (item.contains("\"name\"")) {
+                                table.getItems().add(new LambdaFunctionRow(
+                                    getJsonValue(item, "name"),
+                                    getJsonValue(item, "runtime"),
+                                    getJsonValue(item, "handler"),
+                                    getJsonValue(item, "code")
+                                ));
+                            }
+                        }
+                    }
+                    ((Label)lt1.getChildren().get(1)).setText("Total Functions: " + table.getItems().size());
+                });
+            });
+        };
+
+        invokeBtn.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
+        invokeBtn.setOnAction(e -> {
+            LambdaFunctionRow row = table.getSelectionModel().getSelectedItem();
+            TextInputDialog dialog = new TextInputDialog("{}");
+            dialog.setTitle("Invoke Lambda");
+            dialog.setHeaderText("Invoke " + row.name);
+            dialog.setContentText("Payload (JSON):");
+            dialog.showAndWait().ifPresent(payload -> {
+                HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(API_BASE + "/compute/lambda/" + row.name + "/invoke"))
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(payload)).build();
+                httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
+                    Platform.runLater(() -> {
+                        Alert a = new Alert(Alert.AlertType.INFORMATION, "Execution Result:\n" + r.body());
+                        a.setTitle("Lambda Result");
+                        a.show();
+                    });
+                });
+            });
+        });
+
+        table.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                java.util.Map<String, String> info = new java.util.LinkedHashMap<>();
+                info.put("Function Name", val.name);
+                info.put("Runtime", val.runtime);
+                info.put("Handler", val.handler);
+                showDetails(val.name, info);
+            }
+        });
+
+        container.getChildren().add(lambdaContent);
+        refreshBtn.setOnAction(e -> refresh.run());
+        refresh.run();
+    }
+
+    private void handleCreateLambda() {
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.setTitle("Create Lambda Function");
+        
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        
+        TextField nameField = new TextField();
+        ComboBox<String> runtimeBox = new ComboBox<>();
+        runtimeBox.getItems().addAll("python3.9", "nodejs18.x", "java17");
+        runtimeBox.setValue("python3.9");
+        TextField handlerField = new TextField("handler");
+        TextArea codeArea = new TextArea("import os\n\ndef handler(event, context):\n  print('MiniCloud Event:', os.environ.get('LAMBDA_EVENT'))");
+        codeArea.setPrefRowCount(10);
+        
+        grid.add(new Label("Function name:"), 0, 0); grid.add(nameField, 1, 0);
+        grid.add(new Label("Runtime:"), 0, 1); grid.add(runtimeBox, 1, 1);
+        grid.add(new Label("Handler:"), 0, 2); grid.add(handlerField, 1, 2);
+        grid.add(new Label("Code:"), 0, 3); grid.add(codeArea, 1, 3);
+        
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    String payload = String.format(
+                        "{\"name\":\"%s\",\"runtime\":\"%s\",\"handler\":\"%s\",\"code\":\"%s\"}",
+                        nameField.getText(), runtimeBox.getValue(), handlerField.getText(), codeArea.getText().replace("\"", "\\\"").replace("\n", "\\n")
+                    );
+                    HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/compute/lambda"))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(payload)).build();
+                    httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString());
+                } catch(Exception ex) { ex.printStackTrace(); }
+            }
+            return true;
+        });
+        dialog.showAndWait();
+    }
+
+    private void setupSnsView(HBox actions, StackPane container, Button refreshBtn) {
+        Button createBtn = new Button("Create Topic");
+        styleActionBtn(createBtn, true);
+        createBtn.setOnAction(e -> handleCreateSns());
+        actions.getChildren().add(0, createBtn);
+
+        Button subBtn = new Button("Subscribe");
+        styleActionBtn(subBtn, false);
+        actions.getChildren().add(1, subBtn);
+
+        TableView<SnsTopicRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        TableColumn<SnsTopicRow, String> nameCol = new TableColumn<>("Topic Name");
+        nameCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().name));
+        
+        TableColumn<SnsTopicRow, String> arnCol = new TableColumn<>("ARN");
+        arnCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().arn));
+        
+        table.getColumns().addAll(nameCol, arnCol);
+        
+        GridPane snsGrid = new GridPane();
+        snsGrid.setHgap(15);
+        snsGrid.setVgap(15);
+        snsGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox snt1 = createWidget("Topics", "Total Topics: 0");
+        VBox snt2 = createWidget("Subscriptions", "Active: " + getTelemetry("subscriptions", "0"));
+        VBox snt3 = createWidget("Deliveries", "Last 24h: " + getTelemetry("deliveries24h", "0"));
+        VBox snt4 = createWidget("Reliability", "Delivery Rate: 99.99%");
+        
+        snsGrid.addRow(0, snt1, snt2, snt3, snt4);
+        VBox snsContent = new VBox(snsGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        Runnable refresh = () -> {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/messaging/topics"))
+                .header("Authorization", "Bearer " + jwtToken)
+                .GET().build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> {
+                    table.getItems().clear();
+                    if (res.statusCode() == 200) {
+                        for (String item : res.body().split("\\{")) {
+                            if (item.contains("\"name\"")) {
+                                table.getItems().add(new SnsTopicRow(
+                                    getJsonValue(item, "name"),
+                                    getJsonValue(item, "arn")
+                                ));
+                            }
+                        }
+                    }
+                    ((Label)snt1.getChildren().get(1)).setText("Total Topics: " + table.getItems().size());
+                });
+            });
+        };
+
+        subBtn.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
+        subBtn.setOnAction(e -> {
+            SnsTopicRow row = table.getSelectionModel().getSelectedItem();
+            handleSnsSubscribe(row.name);
+        });
+
+        table.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                java.util.Map<String, String> info = new java.util.LinkedHashMap<>();
+                info.put("Topic Name", val.name);
+                info.put("ARN", val.arn);
+                showDetails(val.name, info);
+            }
+        });
+
+        container.getChildren().add(snsContent);
+        refreshBtn.setOnAction(e -> refresh.run());
+        refresh.run();
+    }
+
+    private void handleCreateSns() {
+        TextInputDialog d = new TextInputDialog();
+        d.setTitle("Create SNS Topic");
+        d.setHeaderText("Enter topic name:");
+        d.showAndWait().ifPresent(name -> {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/messaging/topics?name=" + name))
+                .header("Authorization", "Bearer " + jwtToken)
+                .POST(HttpRequest.BodyPublishers.noBody()).build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString());
+        });
+    }
+
+    private void handleSnsSubscribe(String topicName) {
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.setTitle("Subscribe to " + topicName);
+        
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        
+        ComboBox<String> protocolBox = new ComboBox<>();
+        protocolBox.getItems().addAll("sqs", "email", "http");
+        protocolBox.setValue("sqs");
+        TextField endpointField = new TextField("my-queue");
+        
+        grid.add(new Label("Protocol:"), 0, 0); grid.add(protocolBox, 1, 0);
+        grid.add(new Label("Endpoint:"), 0, 1); grid.add(endpointField, 1, 1);
+        
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.setResultConverter(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    HttpRequest req = HttpRequest.newBuilder()
+                        .uri(URI.create(API_BASE + "/messaging/topics/" + topicName + "/subscribe?protocol=" + protocolBox.getValue() + "&endpoint=" + endpointField.getText()))
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .POST(HttpRequest.BodyPublishers.noBody()).build();
+                    httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString());
+                } catch(Exception ex) {}
+            }
+            return true;
+        });
+        dialog.showAndWait();
+    }
+
+    private void setupSqsView(HBox actions, StackPane container, Button refreshBtn) {
+        Button createBtn = new Button("Create Queue");
+        styleActionBtn(createBtn, true);
+        createBtn.setOnAction(e -> handleCreateSqs());
+        actions.getChildren().add(0, createBtn);
+
+        TableView<SqsQueueRow> table = new TableView<>();
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        TableColumn<SqsQueueRow, String> nameCol = new TableColumn<>("Queue Name");
+        nameCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().name));
+        
+        TableColumn<SqsQueueRow, String> urlCol = new TableColumn<>("Queue URL");
+        urlCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue().url));
+        
+        table.getColumns().addAll(nameCol, urlCol);
+        
+        GridPane sqsGrid = new GridPane();
+        sqsGrid.setHgap(15);
+        sqsGrid.setVgap(15);
+        sqsGrid.setPadding(new Insets(0, 0, 15, 0));
+        
+        VBox qt1 = createWidget("Queues", "Total Queues: 0");
+        VBox qt2 = createWidget("In-Flight Messages", "Avg Depth: " + getTelemetry("inFlightMessages", "0"));
+        VBox qt3 = createWidget("Messages Received", "Last 24h: " + getTelemetry("deliveries24h", "0"));
+        VBox qt4 = createWidget("Dead Letter Queues", "Configured: 1");
+        
+        sqsGrid.addRow(0, qt1, qt2, qt3, qt4);
+        VBox sqsContent = new VBox(sqsGrid, table);
+        VBox.setVgrow(table, Priority.ALWAYS);
+
+        Runnable refresh = () -> {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/messaging/queues"))
+                .header("Authorization", "Bearer " + jwtToken)
+                .GET().build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+                Platform.runLater(() -> {
+                    table.getItems().clear();
+                    if (res.statusCode() == 200) {
+                        for (String item : res.body().split("\\{")) {
+                            if (item.contains("\"name\"")) {
+                                table.getItems().add(new SqsQueueRow(
+                                    getJsonValue(item, "name"),
+                                    getJsonValue(item, "queueUrl")
+                                ));
+                            }
+                        }
+                    }
+                    ((Label)qt1.getChildren().get(1)).setText("Total Queues: " + table.getItems().size());
+                });
+            });
+        };
+
+        table.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
+            if (val != null) {
+                java.util.Map<String, String> info = new java.util.LinkedHashMap<>();
+                info.put("Queue Name", val.name);
+                info.put("Queue URL", val.url);
+                showDetails(val.name, info);
+            }
+        });
+
+        container.getChildren().add(sqsContent);
+        refreshBtn.setOnAction(e -> refresh.run());
+        refresh.run();
+    }
+
+    private void handleCreateSqs() {
+        TextInputDialog d = new TextInputDialog();
+        d.setTitle("Create SQS Queue");
+        d.setHeaderText("Enter queue name:");
+        d.showAndWait().ifPresent(name -> {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/messaging/queues?name=" + name))
+                .header("Authorization", "Bearer " + jwtToken)
+                .POST(HttpRequest.BodyPublishers.noBody()).build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString());
+        });
     }
 
     private void setupSecurityGroupsView(HBox actions, StackPane container, Button refreshBtn) {
@@ -1539,6 +2504,27 @@ public class MiniCloudFxApp extends Application {
         public String type, protocol, port, source, desc;
         public FirewallRuleRow(String type, String protocol, String port, String source, String desc) {
             this.type = type; this.protocol = protocol; this.port = port; this.source = source; this.desc = desc;
+        }
+    }
+
+    public static class LambdaFunctionRow {
+        public String name, runtime, handler, code;
+        public LambdaFunctionRow(String name, String runtime, String handler, String code) {
+            this.name = name; this.runtime = runtime; this.handler = handler; this.code = code;
+        }
+    }
+
+    public static class SqsQueueRow {
+        public String name, url;
+        public SqsQueueRow(String name, String url) {
+            this.name = name; this.url = url;
+        }
+    }
+
+    public static class SnsTopicRow {
+        public String name, arn;
+        public SnsTopicRow(String name, String arn) {
+            this.name = name; this.arn = arn;
         }
     }
 

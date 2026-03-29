@@ -50,7 +50,7 @@ public class CloudFormationService {
                     } else if ("AWS::S3::Bucket".equals(type)) {
                         String name = resource.get("Properties").get("BucketName").asText();
                         try {
-                            bucketService.createBucket(name, owner);
+                            bucketService.createBucket(name, owner, "us-east-1");
                         } catch (java.io.IOException e) {
                             throw new RuntimeException("Failed to create bucket: " + name, e);
                         }

@@ -14,17 +14,21 @@ public class SnsService {
 
     private final SnsTopicRepository topicRepository;
     private final SnsSubscriptionRepository subscriptionRepository;
+    private final SqsService sqsService;
 
-    public SnsService(SnsTopicRepository topicRepository, SnsSubscriptionRepository subscriptionRepository) {
+    public SnsService(SnsTopicRepository topicRepository, 
+                      SnsSubscriptionRepository subscriptionRepository,
+                      SqsService sqsService) {
         this.topicRepository = topicRepository;
         this.subscriptionRepository = subscriptionRepository;
+        this.sqsService = sqsService;
     }
 
     public SnsTopic createTopic(String owner, String name) {
         SnsTopic topic = new SnsTopic();
         topic.setName(name);
         topic.setOwner(owner);
-        topic.setArn("arn:minicloud:sns:region:account:" + name);
+        topic.setArn("arn:aws:sns:us-east-1:" + owner + ":" + name);
         topic.setCreatedAt(LocalDateTime.now());
         return topicRepository.save(topic);
     }
@@ -46,8 +50,13 @@ public class SnsService {
         
         List<SnsSubscription> subs = subscriptionRepository.findByTopic(topic);
         for (SnsSubscription sub : subs) {
-            // Mock delivery
-            System.out.println("SNS Delivery [" + sub.getProtocol() + " to " + sub.getEndpoint() + "]: " + message);
+            if ("sqs".equalsIgnoreCase(sub.getProtocol())) {
+                System.out.println("SNS Delivery [sqs to " + sub.getEndpoint() + "]: Forwarding message to SQS queue.");
+                sqsService.sendMessage(sub.getEndpoint(), message);
+            } else {
+                // Mock delivery for other protocols (email, sms, etc)
+                System.out.println("SNS Delivery [" + sub.getProtocol() + " to " + sub.getEndpoint() + "]: " + message);
+            }
         }
     }
 }

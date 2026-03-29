@@ -42,9 +42,8 @@ public class DataSeeder implements CommandLineRunner {
                       PasswordEncoder passwordEncoder,
                       BucketRepository bucketRepository,
                       SecurityGroupRepository securityGroupRepository,
-                      BucketService bucketService,
-                      VPCRepository vpcRepository,
-                      SubnetRepository subnetRepository) {
+                      BucketService bucketService,VPCRepository vpcRepository, SubnetRepository subnetRepository) 
+    {
         this.userRepository = userRepository;
         this.computeInstanceRepository = computeInstanceRepository;
         this.databaseInstanceRepository = databaseInstanceRepository;
@@ -189,7 +188,7 @@ public class DataSeeder implements CommandLineRunner {
         // 5. Create Sample Bucket
         if (bucketRepository.findByName("sample-logs-bucket").isEmpty()) {
             try {
-                bucketService.createBucket("sample-logs-bucket", "root@minicloud.com");
+                bucketService.createBucket("sample-logs-bucket", "root@minicloud.com", "us-east-1");
             } catch (java.io.IOException e) {
                 e.printStackTrace();
             }

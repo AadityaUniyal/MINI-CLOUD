@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.Principal;
 import java.util.List;
@@ -28,8 +29,10 @@ public class BucketController {
     }
 
     @PostMapping
-    public ResponseEntity<Bucket> createBucket(@RequestParam String name, Principal principal) throws IOException {
-        return ResponseEntity.ok(bucketService.createBucket(name, principal.getName()));
+    public ResponseEntity<Bucket> createBucket(@RequestParam String name, 
+                                               @RequestParam(required = false) String region,
+                                               Principal principal) throws IOException {
+        return ResponseEntity.ok(bucketService.createBucket(name, principal.getName(), region));
     }
 
     @GetMapping
@@ -65,6 +68,30 @@ public class BucketController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+    @PostMapping("/{name}/website")
+    public ResponseEntity<Bucket> enableWebsite(@PathVariable String name, 
+                                                @RequestParam String indexDocument,
+                                                @RequestParam(required = false) String errorDocument,
+                                                Principal principal) {
+        return ResponseEntity.ok(bucketService.enableWebsiteHosting(name, principal.getName(), indexDocument, errorDocument));
+    }
+
+    @GetMapping("/public/{bucketName}/{*path}")
+    public ResponseEntity<Resource> proxyPublicFile(@PathVariable String bucketName, 
+                                                     @PathVariable(required = false) String path) throws IOException {
+        Path filePath = bucketService.resolveWebsiteFile(bucketName, path);
+        if (!Files.exists(filePath)) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Resource resource = new UrlResource(filePath.toUri());
+        String contentType = bucketService.getContentType(filePath);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }
 }
