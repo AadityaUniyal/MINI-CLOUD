@@ -33,4 +33,14 @@ public class IamGroup {
     public void setOwner(String v) { this.owner = v; }
     public List<IamPolicy> getAttachedPolicies() { return attachedPolicies; }
     public void setAttachedPolicies(List<IamPolicy> v) { this.attachedPolicies = v; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private final IamGroup g = new IamGroup();
+        public Builder groupName(String v) { g.setGroupName(v); return this; }
+        public Builder owner(String v) { g.setOwner(v); return this; }
+        public Builder attachedPolicies(List<IamPolicy> v) { g.setAttachedPolicies(v); return this; }
+        public IamGroup build() { return g; }
+    }
 }

@@ -22,5 +22,14 @@ public class BucketPolicy {
     public String getBucketName() { return bucketName; }
     public void setBucketName(String bucketName) { this.bucketName = bucketName; }
     public String getPolicyJson() { return policyJson; }
-    public void setPolicyJson(String policyJson) { this.policyJson = policyJson; }
+    public void setPolicyJson(String v) { this.policyJson = v; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private final BucketPolicy p = new BucketPolicy();
+        public Builder bucketName(String v) { p.setBucketName(v); return this; }
+        public Builder policyJson(String v) { p.setPolicyJson(v); return this; }
+        public BucketPolicy build() { return p; }
+    }
 }

@@ -11,41 +11,49 @@ public class DynamoTable {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String tableName;
+    private String name;
 
     private String partitionKey;
     private String sortKey;
-    private String status; // CREATING, ACTIVE, DELETING
+    private String status; // ACTIVE, CREATING
     private String owner;
+    private long itemCount;
+    private long sizeBytes;
     private LocalDateTime createdAt;
-    private Long itemCount;
-    private Long sizeBytes;
 
     public DynamoTable() {}
 
-    public static Builder builder() { return new Builder(); }
-
     public Long getId() { return id; }
-    public String getTableName() { return tableName; }
+    public String getName() { return name; }
+    public void setName(String v) { this.name = v; }
     public String getPartitionKey() { return partitionKey; }
+    public void setPartitionKey(String v) { this.partitionKey = v; }
     public String getSortKey() { return sortKey; }
+    public void setSortKey(String v) { this.sortKey = v; }
     public String getStatus() { return status; }
     public void setStatus(String v) { this.status = v; }
     public String getOwner() { return owner; }
+    public void setOwner(String v) { this.owner = v; }
+    public long getItemCount() { return itemCount; }
+    public void setItemCount(long v) { this.itemCount = v; }
+    public long getSizeBytes() { return sizeBytes; }
+    public void setSizeBytes(long v) { this.sizeBytes = v; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }
 
-    public static class Builder {
+    public static DynamoTableBuilder builder() { return new DynamoTableBuilder(); }
+
+    public static class DynamoTableBuilder {
         private final DynamoTable t = new DynamoTable();
-        public Builder tableName(String v) { t.tableName = v; return this; }
-        public Builder partitionKey(String v) { t.partitionKey = v; return this; }
-        public Builder sortKey(String v) { t.sortKey = v; return this; }
-        public Builder status(String v) { t.status = v; return this; }
-        public Builder owner(String v) { t.owner = v; return this; }
-        public Builder createdAt(LocalDateTime v) { t.createdAt = v; return this; }
-        public DynamoTable build() { 
-            t.itemCount = 0L;
-            t.sizeBytes = 0L;
-            return t; 
-        }
+        public DynamoTableBuilder name(String val) { t.name = val; return this; }
+        public DynamoTableBuilder tableName(String val) { t.name = val; return this; }
+        public DynamoTableBuilder partitionKey(String val) { t.partitionKey = val; return this; }
+        public DynamoTableBuilder sortKey(String val) { t.sortKey = val; return this; }
+        public DynamoTableBuilder status(String val) { t.status = val; return this; }
+        public DynamoTableBuilder owner(String val) { t.owner = val; return this; }
+        public DynamoTableBuilder itemCount(long val) { t.itemCount = val; return this; }
+        public DynamoTableBuilder sizeBytes(long val) { t.sizeBytes = val; return this; }
+        public DynamoTableBuilder createdAt(LocalDateTime val) { t.createdAt = val; return this; }
+        public DynamoTable build() { return t; }
     }
 }

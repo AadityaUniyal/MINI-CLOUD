@@ -150,6 +150,48 @@ public class ComputeService {
         });
     }
 
+    public void stopInstance(Long id, String owner) {
+        computeInstanceRepository.findById(id).ifPresent(instance -> {
+            if (instance.getOwner().equals(owner)) {
+                dockerService.stopContainer(instance.getContainerId());
+                instance.setStatus("STOPPED");
+                computeInstanceRepository.save(instance);
+
+                userRepository.findByUsername(owner).ifPresent(user -> {
+                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
+                            .user(user)
+                            .action("STOP_COMPUTE")
+                            .resourceId(instance.getContainerId())
+                            .timestamp(LocalDateTime.now())
+                            .details("Stopped instance: " + instance.getName())
+                            .build());
+                    billingService.stopBilling(instance.getContainerId());
+                });
+            }
+        });
+    }
+
+    public void startInstance(Long id, String owner) {
+        computeInstanceRepository.findById(id).ifPresent(instance -> {
+            if (instance.getOwner().equals(owner)) {
+                dockerService.startContainer(instance.getContainerId());
+                instance.setStatus("RUNNING");
+                computeInstanceRepository.save(instance);
+
+                userRepository.findByUsername(owner).ifPresent(user -> {
+                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
+                            .user(user)
+                            .action("START_COMPUTE")
+                            .resourceId(instance.getContainerId())
+                            .timestamp(LocalDateTime.now())
+                            .details("Started instance: " + instance.getName())
+                            .build());
+                    billingService.startBilling(user, instance.getContainerId(), "COMPUTE");
+                });
+            }
+        });
+    }
+
     private void handleVolumeCleanup(String instanceId, String owner) {
         volumeService.getVolumesForInstance(instanceId).forEach(volume -> {
             if (volume.isDeleteOnTermination()) {

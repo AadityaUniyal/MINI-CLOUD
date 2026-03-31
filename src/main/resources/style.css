@@ -1,4 +1,4 @@
-/* --- AWS Console Replica - High Fidelity CSS --- */
+/* --- AWS Console Replica - High Fidelity Cloudscape Design --- */
 
 /* --- Color Tokens --- */
 :root {
@@ -15,6 +15,7 @@
     --aws-sidebar-text-selected: #0073bb;
     --aws-table-header-bg: #fafafa;
     --aws-active-blue: #0073bb;
+    --aws-radius: 8px; /* Cloudscape style roundness */
 }
 
 .root {
@@ -31,66 +32,13 @@
 .aws-tree .tree-cell {
     -fx-background-color: transparent;
     -fx-text-fill: var(--aws-text-dark);
-    -fx-padding: 10 15 10 15;
+    -fx-padding: 8 12 8 12; /* Denser padding */
     -fx-font-size: 14;
 }
 
 .aws-tree .tree-cell:hover {
-    -fx-background-color: #f2f3f3;
+    -fx-background-color: var(--aws-sidebar-item-hover);
     -fx-cursor: hand;
-}
-
-.aws-header .button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Master-Detail Pane */
-.aws-details-pane {
-    -fx-background-color: white;
-    -fx-border-color: #eaeded transparent transparent transparent;
-    -fx-border-width: 1px;
-    -fx-padding: 20px;
-}
-
-.details-title {
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #232f3e;
-}
-
-.details-grid {
-    -fx-hgap: 40px;
-    -fx-vgap: 15px;
-}
-
-.details-label {
-    -fx-text-fill: #687078;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-}
-
-.details-value {
-    -fx-text-fill: #16191f;
-    -fx-font-size: 14px;
-}
-
-/* Services Dropdown */
-.services-dropdown {
-    -fx-background-color: white;
-    -fx-background-radius: 4px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);
-    -fx-padding: 15px;
-}
-
-.service-category-title {
-    -fx-font-weight: bold;
-    -fx-text-fill: #232f3e;
-    -fx-padding: 5px 0 10px 0;
-}
-
-/* Loading Indicator */
-.aws-loading-overlay {
-    -fx-background-color: rgba(255, 255, 255, 0.7);
 }
 
 .aws-tree .tree-cell:selected {
@@ -99,14 +47,10 @@
     -fx-font-weight: bold;
 }
 
-.aws-tree .tree-cell .label {
-    -fx-padding: 0 0 0 5;
-}
-
 /* --- Header & Search --- */
 .aws-header {
     -fx-background-color: var(--aws-header-bg);
-    -fx-padding: 0 20 0 20;
+    -fx-padding: 0 16 0 16;
 }
 
 .aws-search-bar {
@@ -125,56 +69,54 @@
     -fx-text-fill: var(--aws-text-dark);
 }
 
-/* --- Main Content Area --- */
+/* --- Shared Containers --- */
 .content-area {
     -fx-background-color: var(--aws-bg-light);
-    -fx-padding: 24;
+    -fx-padding: 16 24 24 24;
 }
 
 .content-pane {
     -fx-background-color: white;
-    -fx-padding: 20;
+    -fx-padding: 16;
     -fx-border-color: var(--aws-border);
-    -fx-background-radius: 2;
-    -fx-border-radius: 2;
+    -fx-background-radius: var(--aws-radius);
+    -fx-border-radius: var(--aws-radius);
+    -fx-border-width: 1px;
 }
 
-.breadcrumb-label {
-    -fx-text-fill: var(--aws-text-secondary);
-    -fx-font-size: 12;
-}
-
-.title-label {
-    -fx-text-fill: var(--aws-text-dark);
-    -fx-font-size: 20;
-    -fx-font-weight: bold;
-}
-
-/* --- Buttons --- */
-.btn-orange {
-    -fx-background-color: var(--aws-orange);
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-    -fx-padding: 8 16 8 16;
-    -fx-background-radius: 2;
-}
-
-.btn-orange:hover {
-    -fx-background-color: var(--aws-orange-hover);
-}
-
-.btn-secondary {
+/* Master-Detail Pane */
+.aws-details-pane {
     -fx-background-color: white;
-    -fx-text-fill: var(--aws-text-dark);
-    -fx-border-color: var(--aws-text-secondary);
-    -fx-border-radius: 2;
-    -fx-background-radius: 2;
-    -fx-padding: 8 16 8 16;
+    -fx-border-color: var(--aws-border) transparent transparent transparent;
+    -fx-border-width: 1px;
+    -fx-padding: 16px;
+    -fx-background-radius: 0 0 var(--aws-radius) var(--aws-radius);
 }
 
-.btn-secondary:hover {
-    -fx-background-color: #f2f3f3;
+/* --- Cards & Widgets --- */
+.aws-card {
+    -fx-background-color: white;
+    -fx-border-color: var(--aws-border);
+    -fx-padding: 16;
+    -fx-background-radius: var(--aws-radius);
+    -fx-border-radius: var(--aws-radius);
+    -fx-border-width: 1px; /* Thinner strokes instead of shadows */
+}
+
+.aws-card-title {
+    -fx-text-fill: var(--aws-text-dark);
+    -fx-font-weight: bold;
+    -fx-font-size: 16;
+}
+
+.aws-card-link {
+    -fx-text-fill: var(--aws-active-blue);
+    -fx-underline: false;
+    -fx-cursor: hand;
+}
+
+.aws-card-link:hover {
+    -fx-underline: true;
 }
 
 /* --- Tables --- */
@@ -189,7 +131,7 @@
 
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-size: 40;
+    -fx-size: 36;
 }
 
 .table-view .column-header .label {
@@ -202,7 +144,7 @@
     -fx-background-color: white;
     -fx-border-color: var(--aws-border);
     -fx-border-width: 0 0 1 0;
-    -fx-cell-size: 45;
+    -fx-cell-size: 40;
 }
 
 .table-view .table-row-cell:hover {
@@ -214,38 +156,62 @@
     -fx-text-fill: var(--aws-active-blue);
 }
 
-/* --- Cards & Widgets --- */
-.aws-card {
-    -fx-background-color: white;
-    -fx-border-color: var(--aws-border);
-    -fx-padding: 20;
-    -fx-background-radius: 4;
-    -fx-border-radius: 4;
-}
-
-.aws-card-title {
-    -fx-text-fill: var(--aws-text-dark);
+/* --- Buttons --- */
+.btn-orange {
+    -fx-background-color: var(--aws-orange);
+    -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 16;
-}
-
-.aws-card-link {
-    -fx-text-fill: #0066cc;
-    -fx-underline: false;
     -fx-cursor: hand;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 4;
 }
 
-.aws-card-link:hover {
-    -fx-underline: true;
+.btn-orange:hover {
+    -fx-background-color: var(--aws-orange-hover);
 }
 
-/* --- Dashboard Widgets --- */
-.widget-grid {
-    -fx-hgap: 20;
-    -fx-vgap: 20;
+.btn-secondary {
+    -fx-background-color: white;
+    -fx-text-fill: var(--aws-text-dark);
+    -fx-border-color: var(--aws-text-secondary);
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16 8 16;
 }
 
-/* --- Login / Register Overrides --- */
+.btn-secondary:hover {
+    -fx-background-color: #f2f3f3;
+}
+
+/* --- Typography --- */
+.title-label {
+    -fx-text-fill: var(--aws-text-dark);
+    -fx-font-size: 20;
+    -fx-font-weight: bold;
+}
+
+.details-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: var(--aws-header-bg);
+}
+
+.details-label {
+    -fx-text-fill: var(--aws-text-secondary);
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.details-value {
+    -fx-text-fill: var(--aws-text-dark);
+    -fx-font-size: 14px;
+}
+
+/* --- Misc --- */
+.aws-loading-overlay {
+    -fx-background-color: rgba(255, 255, 255, 0.7);
+}
+
 .login-root {
     -fx-background-color: #0f172a;
 }

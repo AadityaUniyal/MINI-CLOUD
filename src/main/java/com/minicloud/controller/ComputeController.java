@@ -43,6 +43,18 @@ public class ComputeController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/stop")
+    public ResponseEntity<Void> stopInstance(@PathVariable Long id, Authentication auth) {
+        computeService.stopInstance(id, auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<Void> startInstance(@PathVariable Long id, Authentication auth) {
+        computeService.startInstance(id, auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/terminate")
     public ResponseEntity<Void> terminateInstance(@RequestParam String name) {
         computeService.terminateInstance(name);

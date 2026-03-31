@@ -8,15 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-import com.minicloud.model.VPC;
-import com.minicloud.model.Subnet;
-import com.minicloud.model.User;
-import com.minicloud.model.ComputeInstance;
-import com.minicloud.model.DatabaseInstance;
-import com.minicloud.model.Stack;
-import com.minicloud.model.SecurityGroup;
-import com.minicloud.model.FirewallRule;
-import com.minicloud.repository.*;
 import java.util.Collections;
 import java.util.Arrays;
 import java.util.UUID;
@@ -34,6 +25,11 @@ public class DataSeeder implements CommandLineRunner {
     private final BucketService bucketService;
     private final VPCRepository vpcRepository;
     private final SubnetRepository subnetRepository;
+    private final LambdaRepository lambdaRepository;
+    private final SqsQueueRepository sqsQueueRepository;
+    private final SnsTopicRepository snsTopicRepository;
+    private final DynamoTableRepository dynamoTableRepository;
+    private final AuditLogRepository auditLogRepository;
 
     public DataSeeder(UserRepository userRepository, 
                       ComputeInstanceRepository computeInstanceRepository,
@@ -42,7 +38,14 @@ public class DataSeeder implements CommandLineRunner {
                       PasswordEncoder passwordEncoder,
                       BucketRepository bucketRepository,
                       SecurityGroupRepository securityGroupRepository,
-                      BucketService bucketService,VPCRepository vpcRepository, SubnetRepository subnetRepository) 
+                      BucketService bucketService,
+                      VPCRepository vpcRepository, 
+                      SubnetRepository subnetRepository,
+                      LambdaRepository lambdaRepository,
+                      SqsQueueRepository sqsQueueRepository,
+                      SnsTopicRepository snsTopicRepository,
+                      DynamoTableRepository dynamoTableRepository,
+                      AuditLogRepository auditLogRepository) 
     {
         this.userRepository = userRepository;
         this.computeInstanceRepository = computeInstanceRepository;
@@ -54,32 +57,35 @@ public class DataSeeder implements CommandLineRunner {
         this.bucketService = bucketService;
         this.vpcRepository = vpcRepository;
         this.subnetRepository = subnetRepository;
+        this.lambdaRepository = lambdaRepository;
+        this.sqsQueueRepository = sqsQueueRepository;
+        this.snsTopicRepository = snsTopicRepository;
+        this.dynamoTableRepository = dynamoTableRepository;
+        this.auditLogRepository = auditLogRepository;
     }
 
     @Override
     public void run(String... args) throws Exception {
         if (userRepository.count() > 0) return;
 
-        // 1. Create Sample AWS Root Account
         String adminAccountId = "123456789012";
+
+        // 1. Create Root Admin
         User rootAdmin = User.builder()
-                .username("root@minicloud.com")
+                .username("root")
                 .email("root@minicloud.com")
-                .password(passwordEncoder.encode("root123"))
+                .password(passwordEncoder.encode("admin123"))
                 .role("ROLE_ADMIN")
-                .isRootUser(true)
                 .accountId(adminAccountId)
-                .accountAlias("minicloud-production")
-                .fullName("MiniCloud Admin")
-                .phoneNumber("+1-555-0199")
-                .address("123 Cloud Way, Seattle, WA")
-                .country("USA")
+                .isRootUser(true)
                 .balance(1000.0)
                 .status("ACTIVE")
+                .owner("SYSTEM")
+                .createdAt(LocalDateTime.now())
                 .build();
         userRepository.save(rootAdmin);
 
-        // 1.1 Create Default VPC & Subnet for Root
+        // Default VPC & Subnet
         VPC defaultVpc = VPC.builder()
                 .vpcId("vpc-0a1b2c3d")
                 .cidrBlock("10.0.0.0/16")
@@ -118,48 +124,36 @@ public class DataSeeder implements CommandLineRunner {
         User iamUser = User.builder()
                 .username(adminAccountId + "/iam-admin")
                 .iamUsername("iam-admin")
+                .email("iam-admin@minicloud.com")
                 .accountId(adminAccountId)
                 .isRootUser(false)
                 .password(passwordEncoder.encode("iam123"))
                 .role("ROLE_USER")
-                .owner("root@minicloud.com") // Linked to Root
+                .owner("root@minicloud.com") 
                 .balance(500.0)
                 .status("ACTIVE")
                 .build();
         userRepository.save(iamUser);
 
-        // 3. Create Sample Compute Instance (owned by rootAdmin)
+        // 3. Create Sample Compute Instance
         ComputeInstance instance = ComputeInstance.builder()
                 .name("prod-web-server")
-                .containerId("mock-container-123")
-                .image("tomcat:latest")
+                .instanceType("t3.micro")
+                .image("ubuntu-22.04-lts")
                 .status("RUNNING")
                 .owner("root@minicloud.com")
-                .instanceType("t2.medium")
                 .region("us-east-1")
                 .availabilityZone("us-east-1a")
-                .publicIp("54.214.12.88")
-                .privateIp("172.31.22.5")
+                .publicIp("54.12.34.56")
                 .vpcId("vpc-0a1b2c3d")
                 .subnetId("subnet-0e1f2g3h")
-                .amiId("ami-12345678")
-                .ebsOptimized(true)
-                .securityGroups(Arrays.asList("web-sg", "default"))
-                .keyPairName("prod-key")
-                .hostPort(8081)
-                .createdAt(LocalDateTime.now().minusDays(2))
+                .createdAt(LocalDateTime.now().minusDays(1))
                 .build();
         computeInstanceRepository.save(instance);
 
-        // 3. Create Sample Database
+        // 3a. Create Database Instance
         DatabaseInstance db = DatabaseInstance.builder()
-                .name("prod-db-instance")
-                .containerId("mock-db-456")
-                .dbName("minicloud_db")
-                .rootPassword("dbpass123")
-                .hostPort(33061)
-                .status("RUNNING")
-                .owner("root@minicloud.com")
+                .name("prod-db")
                 .engine("MySQL")
                 .engineVersion("8.0")
                 .dbInstanceClass("db.t3.small")
@@ -169,7 +163,8 @@ public class DataSeeder implements CommandLineRunner {
                 .publiclyAccessible(false)
                 .vpcId("vpc-0a1b2c3d")
                 .subnetId("subnet-0e1f2g3h")
-                .backupRetention(7)
+                .backupRetentionPeriod(7)
+                .owner("root@minicloud.com")
                 .createdAt(LocalDateTime.now().minusDays(5))
                 .build();
         databaseInstanceRepository.save(db);
@@ -185,15 +180,54 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
         stackRepository.save(stack);
         
-        // 5. Create Sample Bucket
-        if (bucketRepository.findByName("sample-logs-bucket").isEmpty()) {
-            try {
-                bucketService.createBucket("sample-logs-bucket", "root@minicloud.com", "us-east-1");
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-            }
-        }
+        // 6. Create Sample Lambda Function
+        lambdaRepository.save(LambdaFunction.builder()
+                .name("process-logs-lambda")
+                .runtime("java17")
+                .handler("com.minicloud.lambda.LogHandler")
+                .owner("root@minicloud.com")
+                .status("ACTIVE")
+                .memorySize(512)
+                .timeout(30)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        // 7. Create Sample SQS Queue
+        sqsQueueRepository.save(SqsQueue.builder()
+                .name("order-processing-queue")
+                .owner("root@minicloud.com")
+                .visibilityTimeout(30)
+                .messageRetentionPeriod(345600)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        // 8. Create Sample SNS Topic
+        snsTopicRepository.save(SnsTopic.builder()
+                .name("system-alerts-topic")
+                .owner("root@minicloud.com")
+                .displayName("System Alerts")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        // 9. Create Sample DynamoDB Table
+        dynamoTableRepository.save(DynamoTable.builder()
+                .name("UserMetadata")
+                .partitionKey("UserId")
+                .sortKey("Timestamp")
+                .owner("root@minicloud.com")
+                .status("ACTIVE")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        // 10. Sample Audit Log
+        auditLogRepository.save(AuditLog.builder()
+                .user(rootAdmin)
+                .action("SEEDED_DATA")
+                .resourceId("SYSTEM")
+                .details("Initial cloud environment established via DataSeeder")
+                .timestamp(LocalDateTime.now())
+                .build());
         
-        System.out.println("DataSeeder: Database seeded with high-fidelity cloud metadata.");
+        System.out.println("DataSeeder: Database seeded with high-fidelity cloud metadata across 10 modules.");
     }
 }

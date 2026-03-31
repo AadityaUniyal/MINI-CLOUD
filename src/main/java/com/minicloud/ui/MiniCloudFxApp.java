@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import com.minicloud.dto.DashboardMetricsDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -40,25 +42,35 @@ public class MiniCloudFxApp extends Application {
     private final String API_BASE = "http://localhost:8080/api";
     private VBox detailsPane;
     private javafx.animation.Timeline autoRefreshTimeline;
-    private JsonNode globalTelemetry = new ObjectMapper().createObjectNode();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private DashboardMetricsDTO currentMetrics = new DashboardMetricsDTO();
     private javafx.animation.Timeline globalTelemetryTimeline;
     
     private String getTelemetry(String key, String fallback) {
-        if (globalTelemetry != null && globalTelemetry.has(key)) {
-            return globalTelemetry.get(key).asText();
+        try {
+            Field field = DashboardMetricsDTO.class.getDeclaredField(key);
+            field.setAccessible(true);
+            Object val = field.get(currentMetrics);
+            return val != null ? val.toString() : fallback;
+        } catch (Exception e) {
+            return fallback;
         }
-        return fallback;
     }
     
     private void fetchTelemetry(Runnable onDone) {
-        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/monitoring/dashboard")).header("Authorization", "Bearer " + jwtToken).GET().build();
+        HttpRequest req = HttpRequest.newBuilder()
+            .uri(URI.create(API_BASE + "/monitoring/dashboard"))
+            .header("Authorization", "Bearer " + jwtToken)
+            .GET().build();
         httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
             try {
                 if(res.statusCode() == 200) {
-                    globalTelemetry = new ObjectMapper().readTree(res.body());
+                    currentMetrics = objectMapper.readValue(res.body(), DashboardMetricsDTO.class);
                     if (onDone != null) Platform.runLater(onDone);
                 }
-            } catch(Exception e) {}
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
@@ -459,9 +471,14 @@ public class MiniCloudFxApp extends Application {
         // Services Menu Popover
         servicesBox.setOnMouseClicked(e -> showServicesMenu(servicesBox));
 
-        // Search Bar Logic
+        // Search Bar Logic (Global)
         searchBar.textProperty().addListener((obs, old, text) -> {
             filterSidebar(navRoot, text);
+            if (text.length() > 2) {
+                // Show floating search results or just jump to first match
+                TreeItem<String> match = findInTree(navRoot, text);
+                if (match != null) navTree.getSelectionModel().select(match);
+            }
         });
 
         Scene scene = new Scene(root, 1200, 800);
@@ -563,11 +580,20 @@ public class MiniCloudFxApp extends Application {
         Label vpcCount = new Label("VPC: Loading...");
         welcome.getChildren().addAll(ec2Count, s3Count, rdsCount, vpcCount);
 
+        HBox countsBox = new HBox(20);
+        countsBox.setPadding(new Insets(10, 0, 0, 0));
+        VBox v1 = new VBox(2, new Label("Instances"), ec2Count);
+        VBox v2 = new VBox(2, new Label("Buckets"), s3Count);
+        VBox v3 = new VBox(2, new Label("Databases"), rdsCount);
+        VBox v4 = new VBox(2, new Label("Networks"), vpcCount);
+        countsBox.getChildren().addAll(v1, v2, v3, v4);
+        welcome.getChildren().add(countsBox);
+
         // Fetch counts
-        fetchList("/compute/list", res -> ec2Count.setText("EC2 Instances: " + (res.split("\\{").length-1)));
-        fetchList("/storage", res -> s3Count.setText("S3 Buckets: " + (res.split("\\{").length-1)));
-        fetchList("/database/instances", res -> rdsCount.setText("RDS Databases: " + (res.split("\\{").length-1)));
-        fetchList("/firewall/vpcs", res -> vpcCount.setText("VPCs: " + (res.split("\\{").length-1)));
+        fetchList("/compute/list", res -> Platform.runLater(() -> ec2Count.setText(String.valueOf(res.split("\\{").length-1))));
+        fetchList("/buckets", res -> Platform.runLater(() -> s3Count.setText(String.valueOf(res.split("\\{").length-1))));
+        fetchList("/database/instances", res -> Platform.runLater(() -> rdsCount.setText(String.valueOf(res.split("\\{").length-1))));
+        fetchList("/firewall/vpcs", res -> Platform.runLater(() -> vpcCount.setText(String.valueOf(res.split("\\{").length-1))));
 
         // Widget 2: Security Health
         VBox securityStatus = createWidget("Security Health", "GuardDuty & WAF findings.");
@@ -765,35 +791,61 @@ public class MiniCloudFxApp extends Application {
         
         Runnable refresh = () -> {
             fetchList("/compute/list", res -> {
-                table.getItems().clear();
-                for (String item : res.split("\\{")) {
-                    if (item.contains("\"id\"")) {
-                        table.getItems().add(new InstanceRow(
-                            getJsonValue(item, "name"),
-                            getJsonValue(item, "id"),
-                            getJsonValue(item, "status"),
-                            getJsonValue(item, "instanceType"),
-                            getJsonValue(item, "publicIp"),
-                            getJsonValue(item, "hostPort")
-                        ));
+                try {
+                    JsonNode root = objectMapper.readTree(res);
+                    table.getItems().clear();
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new InstanceRow(
+                                item.get("name") != null ? item.get("name").asText() : "N/A",
+                                item.get("id") != null ? item.get("id").asText() : "N/A",
+                                item.get("status") != null ? item.get("status").asText() : "N/A",
+                                item.get("instanceType") != null ? item.get("instanceType").asText() : "N/A",
+                                item.get("publicIp") != null ? item.get("publicIp").asText() : "N/A",
+                                item.get("hostPort") != null ? item.get("hostPort").asText() : "N/A"
+                            ));
+                        }
                     }
-                }
-                Platform.runLater(() -> {
-                    ((Label)t1.getChildren().get(1)).setText("Total instances: " + table.getItems().size() + "\nVolumes: " + getTelemetry("totalVolumes", "0"));
-                    long running = table.getItems().stream().filter(r -> "RUNNING".equals(((InstanceRow)r).state)).count();
-                    ((Label)t2.getChildren().get(1)).setText("Running instances: " + running);
-                });
+                    Platform.runLater(() -> {
+                        ((Label)t1.getChildren().get(1)).setText("Total instances: " + table.getItems().size() + "\nVolumes: " + getTelemetry("totalVolumes", "0"));
+                        long running = table.getItems().stream().filter(r -> "RUNNING".equals(r.state)).count();
+                        ((Label)t2.getChildren().get(1)).setText("Running instances: " + running);
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
+        Button stopBtn = new Button("Stop");
+        styleActionBtn(stopBtn, false);
+        stopBtn.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
+        stopBtn.setOnAction(e -> handleLifecycleEC2(table.getSelectionModel().getSelectedItem(), "stop", refresh));
+
+        Button startBtn = new Button("Start");
+        styleActionBtn(startBtn, false);
+        startBtn.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
+        startBtn.setOnAction(e -> handleLifecycleEC2(table.getSelectionModel().getSelectedItem(), "start", refresh));
+        
         terminateBtn.setOnAction(e -> handleTerminateEC2(table.getSelectionModel().getSelectedItem(), refresh));
-        actions.getChildren().add(1, terminateBtn);
+        actions.getChildren().add(1, stopBtn);
+        actions.getChildren().add(2, startBtn);
+        actions.getChildren().add(3, terminateBtn);
 
         refreshBtn.setOnAction(e -> refresh.run());
         styleActionBtn(refreshBtn, false);
         refresh.run();
         addAutoRefreshToggle(actions, refresh);
     }
+
+    private TreeItem<String> findInTree(TreeItem<String> root, String text) {
+        for (TreeItem<String> child : root.getChildren()) {
+            if (child.getValue().toLowerCase().contains(text.toLowerCase())) return child;
+            TreeItem<String> res = findInTree(child, text);
+            if (res != null) return res;
+        }
+        return null;
+    }
+
+
 
     private void setupDatabasesView(HBox actions, StackPane container, Button refreshBtn) {
         Button createBtn = new Button("Create database");
@@ -859,20 +911,23 @@ public class MiniCloudFxApp extends Application {
 
         Runnable refresh = () -> {
             fetchList("/database/instances", res -> {
-                table.getItems().clear();
-                for (String item : res.split("\\{")) {
-                    if (item.contains("\"name\"")) {
-                        table.getItems().add(new DatabaseRow(
-                            getJsonValue(item, "id"),
-                            getJsonValue(item, "engine"),
-                            getJsonValue(item, "status"),
-                            getJsonValue(item, "dbInstanceClass")
-                        ));
+                try {
+                    JsonNode root = objectMapper.readTree(res);
+                    table.getItems().clear();
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new DatabaseRow(
+                                item.get("id") != null ? item.get("id").asText() : "N/A",
+                                item.get("engine") != null ? item.get("engine").asText() : "N/A",
+                                item.get("status") != null ? item.get("status").asText() : "N/A",
+                                item.get("dbInstanceClass") != null ? item.get("dbInstanceClass").asText() : "N/A"
+                            ));
+                        }
                     }
-                }
-                Platform.runLater(() -> {
-                    ((Label)dt1.getChildren().get(1)).setText("Active DBs: " + table.getItems().size());
-                });
+                    Platform.runLater(() -> {
+                        ((Label)dt1.getChildren().get(1)).setText("Active DBs: " + table.getItems().size());
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
         
@@ -931,22 +986,23 @@ public class MiniCloudFxApp extends Application {
             HttpRequest req = HttpRequest.newBuilder().uri(URI.create(API_BASE + "/dynamodb/tables"))
                 .header("Authorization", "Bearer " + jwtToken).GET().build();
             httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                Platform.runLater(() -> {
-                    table.getItems().clear();
-                    if(res.statusCode() == 200) {
-                        for (String item : res.body().split("\\{")) {
-                            if (item.contains("\"tableName\"")) {
+                try {
+                    JsonNode root = objectMapper.readTree(res.body());
+                    Platform.runLater(() -> {
+                        table.getItems().clear();
+                        if (root.isArray()) {
+                            for (JsonNode item : root) {
                                 table.getItems().add(new DynamoTableRow(
-                                    getJsonValue(item, "tableName"),
-                                    getJsonValue(item, "status"),
-                                    getJsonValue(item, "partitionKey"),
-                                    getJsonValue(item, "sortKey")
+                                    item.get("tableName") != null ? item.get("tableName").asText() : "N/A",
+                                    item.get("status") != null ? item.get("status").asText() : "N/A",
+                                    item.get("partitionKey") != null ? item.get("partitionKey").asText() : "N/A",
+                                    item.get("sortKey") != null ? item.get("sortKey").asText() : "N/A"
                                 ));
                             }
                         }
-                    }
-                    ((Label)t1.getChildren().get(1)).setText("Active tables: " + table.getItems().size());
-                });
+                        ((Label)t1.getChildren().get(1)).setText("Active tables: " + table.getItems().size());
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
@@ -1107,23 +1163,26 @@ public class MiniCloudFxApp extends Application {
 
         Runnable refresh = () -> {
             fetchList("/buckets", res -> {
-                table.getItems().clear();
-                for (String item : res.split("\\{")) {
-                    if (item.contains("\"name\"")) {
-                        String ws = getJsonValue(item, "websiteEnabled").equals("true") ? "Active" : "Disabled";
-                        table.getItems().add(new BucketRow(
-                            getJsonValue(item, "name"),
-                            getJsonValue(item, "region"),
-                            getJsonValue(item, "accessControl"),
-                            ws
-                        ));
+                try {
+                    JsonNode root = objectMapper.readTree(res);
+                    table.getItems().clear();
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            String ws = item.get("websiteEnabled") != null && item.get("websiteEnabled").asBoolean() ? "Active" : "Disabled";
+                            table.getItems().add(new BucketRow(
+                                item.get("name") != null ? item.get("name").asText() : "N/A",
+                                item.get("region") != null ? item.get("region").asText() : "N/A",
+                                item.get("accessControl") != null ? item.get("accessControl").asText() : "N/A",
+                                ws
+                            ));
+                        }
                     }
-                }
-                Platform.runLater(() -> {
-                    ((Label)st1.getChildren().get(1)).setText("Total Buckets: " + table.getItems().size());
-                    long publicCount = table.getItems().stream().filter(b -> b.access != null && b.access.toLowerCase().contains("public")).count();
-                    ((Label)st3.getChildren().get(1)).setText("Public Contexts: " + publicCount);
-                });
+                    Platform.runLater(() -> {
+                        ((Label)st1.getChildren().get(1)).setText("Total Buckets: " + table.getItems().size());
+                        long publicCount = table.getItems().stream().filter(b -> b.access != null && b.access.toLowerCase().contains("public")).count();
+                        ((Label)st3.getChildren().get(1)).setText("Public Contexts: " + publicCount);
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
@@ -1288,18 +1347,21 @@ public class MiniCloudFxApp extends Application {
 
         Runnable refresh = () -> {
             fetchList("/vpc/list", res -> {
-                table.getItems().clear();
-                for (String item : res.split("\\{")) {
-                    if (item.contains("\"id\"")) {
-                        table.getItems().add(new VpcRow(
-                            getJsonValue(item, "id"),
-                            getJsonValue(item, "name"),
-                            getJsonValue(item, "cidrBlock"),
-                            getJsonValue(item, "state")
-                        ));
+                try {
+                    JsonNode root = objectMapper.readTree(res);
+                    table.getItems().clear();
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new VpcRow(
+                                item.has("id") ? item.get("id").asText() : "N/A",
+                                item.has("name") ? item.get("name").asText() : "N/A",
+                                item.has("cidrBlock") ? item.get("cidrBlock").asText() : "N/A",
+                                item.has("state") ? item.get("state").asText() : "N/A"
+                            ));
+                        }
                     }
-                }
-                Platform.runLater(() -> { ((Label)vt1.getChildren().get(1)).setText("Total: " + table.getItems().size()); });
+                    Platform.runLater(() -> { ((Label)vt1.getChildren().get(1)).setText("Total: " + table.getItems().size()); });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
         refreshBtn.setOnAction(e -> refresh.run());
@@ -1911,15 +1973,13 @@ public class MiniCloudFxApp extends Application {
 
     private String getJsonValue(String json, String key) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            // Wrap in braces if it's a snippet from a split
-            String cleanJson = json.trim();
-            if (!cleanJson.startsWith("{")) cleanJson = "{" + cleanJson;
-            if (!cleanJson.endsWith("}")) cleanJson = cleanJson + "}";
-            
-            JsonNode root = mapper.readTree(cleanJson);
+            JsonNode root = objectMapper.readTree(json);
             JsonNode node = root.get(key);
-            return node != null ? node.asText() : "N/A";
+            if (node == null) {
+                // Try case-insensitive or common variants if needed, or just return N/A
+                return "N/A";
+            }
+            return node.asText();
         } catch (Exception e) {
             return "N/A";
         }
@@ -1982,51 +2042,31 @@ public class MiniCloudFxApp extends Application {
         VBox.setVgrow(table, Priority.ALWAYS);
 
         Runnable refresh = () -> {
-            HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/compute/lambda"))
-                .header("Authorization", "Bearer " + jwtToken)
-                .GET().build();
-            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                Platform.runLater(() -> {
+            fetchList("/compute/lambda", res -> {
+                try {
+                    JsonNode root = objectMapper.readTree(res);
                     table.getItems().clear();
-                    if (res.statusCode() == 200) {
-                        for (String item : res.body().split("\\{")) {
-                            if (item.contains("\"name\"")) {
-                                table.getItems().add(new LambdaFunctionRow(
-                                    getJsonValue(item, "name"),
-                                    getJsonValue(item, "runtime"),
-                                    getJsonValue(item, "handler"),
-                                    getJsonValue(item, "code")
-                                ));
-                            }
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new LambdaFunctionRow(
+                                item.has("name") ? item.get("name").asText() : "N/A",
+                                item.has("runtime") ? item.get("runtime").asText() : "N/A",
+                                item.has("handler") ? item.get("handler").asText() : "N/A",
+                                item.has("code") ? item.get("code").asText() : ""
+                            ));
                         }
                     }
-                    ((Label)lt1.getChildren().get(1)).setText("Total Functions: " + table.getItems().size());
-                });
+                    Platform.runLater(() -> {
+                        ((Label)lt1.getChildren().get(1)).setText("Total Functions: " + table.getItems().size());
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
         invokeBtn.disableProperty().bind(table.getSelectionModel().selectedItemProperty().isNull());
         invokeBtn.setOnAction(e -> {
             LambdaFunctionRow row = table.getSelectionModel().getSelectedItem();
-            TextInputDialog dialog = new TextInputDialog("{}");
-            dialog.setTitle("Invoke Lambda");
-            dialog.setHeaderText("Invoke " + row.name);
-            dialog.setContentText("Payload (JSON):");
-            dialog.showAndWait().ifPresent(payload -> {
-                HttpRequest req = HttpRequest.newBuilder()
-                    .uri(URI.create(API_BASE + "/compute/lambda/" + row.name + "/invoke"))
-                    .header("Authorization", "Bearer " + jwtToken)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(payload)).build();
-                httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
-                    Platform.runLater(() -> {
-                        Alert a = new Alert(Alert.AlertType.INFORMATION, "Execution Result:\n" + r.body());
-                        a.setTitle("Lambda Result");
-                        a.show();
-                    });
-                });
-            });
+            handleInvokeLambda(row);
         });
 
         table.getSelectionModel().selectedItemProperty().addListener((obs, old, val) -> {
@@ -2124,25 +2164,22 @@ public class MiniCloudFxApp extends Application {
         VBox.setVgrow(table, Priority.ALWAYS);
 
         Runnable refresh = () -> {
-            HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/messaging/topics"))
-                .header("Authorization", "Bearer " + jwtToken)
-                .GET().build();
-            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                Platform.runLater(() -> {
+            fetchList("/messaging/topics", res -> {
+                try {
+                    JsonNode root = objectMapper.readTree(res);
                     table.getItems().clear();
-                    if (res.statusCode() == 200) {
-                        for (String item : res.body().split("\\{")) {
-                            if (item.contains("\"name\"")) {
-                                table.getItems().add(new SnsTopicRow(
-                                    getJsonValue(item, "name"),
-                                    getJsonValue(item, "arn")
-                                ));
-                            }
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new SnsTopicRow(
+                                item.has("name") ? item.get("name").asText() : "N/A",
+                                item.has("arn") ? item.get("arn").asText() : "N/A"
+                            ));
                         }
                     }
-                    ((Label)snt1.getChildren().get(1)).setText("Total Topics: " + table.getItems().size());
-                });
+                    Platform.runLater(() -> {
+                        ((Label)snt1.getChildren().get(1)).setText("Total Topics: " + table.getItems().size());
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
@@ -2244,25 +2281,22 @@ public class MiniCloudFxApp extends Application {
         VBox.setVgrow(table, Priority.ALWAYS);
 
         Runnable refresh = () -> {
-            HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(API_BASE + "/messaging/queues"))
-                .header("Authorization", "Bearer " + jwtToken)
-                .GET().build();
-            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                Platform.runLater(() -> {
+            fetchList("/messaging/queues", res -> {
+                try {
+                    JsonNode root = objectMapper.readTree(res);
                     table.getItems().clear();
-                    if (res.statusCode() == 200) {
-                        for (String item : res.body().split("\\{")) {
-                            if (item.contains("\"name\"")) {
-                                table.getItems().add(new SqsQueueRow(
-                                    getJsonValue(item, "name"),
-                                    getJsonValue(item, "queueUrl")
-                                ));
-                            }
+                    if (root.isArray()) {
+                        for (JsonNode item : root) {
+                            table.getItems().add(new SqsQueueRow(
+                                item.has("name") ? item.get("name").asText() : "N/A",
+                                item.has("queueUrl") ? item.get("queueUrl").asText() : "N/A"
+                            ));
                         }
                     }
-                    ((Label)qt1.getChildren().get(1)).setText("Total Queues: " + table.getItems().size());
-                });
+                    Platform.runLater(() -> {
+                        ((Label)qt1.getChildren().get(1)).setText("Total Queues: " + table.getItems().size());
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
@@ -2389,14 +2423,29 @@ public class MiniCloudFxApp extends Application {
         grid.add(v, 1, row);
     }
 
+    private void handleLifecycleEC2(InstanceRow row, String action, Runnable refresh) {
+        if (row == null) return;
+        HttpRequest req = HttpRequest.newBuilder()
+            .uri(URI.create(API_BASE + "/compute/" + row.id + "/" + action))
+            .header("Authorization", "Bearer " + jwtToken)
+            .POST(HttpRequest.BodyPublishers.noBody()).build();
+        httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
+            Platform.runLater(refresh);
+        });
+    }
+
     private void showBucketExplorer(String bucketName) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("S3 Bucket Explorer: " + bucketName);
 
-        VBox layout = new VBox(15);
-        layout.setPadding(new Insets(20));
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(16));
+        layout.getStyleClass().add("content-pane");
 
+        HBox breadcrumbs = new HBox(5);
+        breadcrumbs.setAlignment(Pos.CENTER_LEFT);
+        
         TableView<String[]> fileTable = new TableView<>();
         fileTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         TableColumn<String[], String> nameCol = new TableColumn<>("Name");
@@ -2405,39 +2454,135 @@ public class MiniCloudFxApp extends Application {
         sizeCol.setCellValueFactory(f -> new javafx.beans.property.SimpleStringProperty(f.getValue()[1]));
         fileTable.getColumns().addAll(nameCol, sizeCol);
 
-        Runnable refreshFiles = () -> {
+        java.util.concurrent.atomic.AtomicReference<String> currentPrefix = new java.util.concurrent.atomic.AtomicReference<>("");
+        final Runnable[] refreshFilesRef = new Runnable[1];
+
+        refreshFilesRef[0] = () -> {
             HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(API_BASE + "/buckets/" + bucketName + "/files"))
                 .header("Authorization", "Bearer " + jwtToken)
                 .GET().build();
             httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(res -> {
-                Platform.runLater(() -> {
-                    fileTable.getItems().clear();
-                    if (res.statusCode() == 200) {
-                        for (String line : res.body().split("\\{")) {
-                            if (line.contains("\"fileName\"")) {
-                                String fname = getJsonValue(line, "fileName");
-                                String fsize = getJsonValue(line, "size");
-                                fileTable.getItems().add(new String[]{fname, fsize + " bytes"});
+                try {
+                    final JsonNode root = objectMapper.readTree(res.body());
+                    Platform.runLater(() -> {
+                        fileTable.getItems().clear();
+                        String prefix = currentPrefix.get();
+                        
+                        // Update Breadcrumbs
+                        breadcrumbs.getChildren().clear();
+                        Button rootBtn = new Button(bucketName);
+                        rootBtn.getStyleClass().add("aws-card-link");
+                        rootBtn.setOnAction(e -> { currentPrefix.set(""); refreshFilesRef[0].run(); });
+                        breadcrumbs.getChildren().add(rootBtn);
+                        
+                        if (!prefix.isEmpty()) {
+                            String[] parts = prefix.split("/");
+                            StringBuilder pathAccumulator = new StringBuilder();
+                            for (String part : parts) {
+                                if (part.isEmpty()) continue;
+                                pathAccumulator.append(part).append("/");
+                                final String targetPath = pathAccumulator.toString();
+                                breadcrumbs.getChildren().add(new Label(">"));
+                                Button b = new Button(part);
+                                b.getStyleClass().add("aws-card-link");
+                                b.setOnAction(e -> { currentPrefix.set(targetPath); refreshFilesRef[0].run(); });
+                                breadcrumbs.getChildren().add(b);
                             }
                         }
-                    }
-                });
+
+                        java.util.Set<String> folders = new java.util.TreeSet<>();
+                        java.util.List<String[]> filesAtLevel = new java.util.ArrayList<>();
+
+                        if (root.isArray()) {
+                            for (JsonNode node : root) {
+                                String fullName = node.get("fileName").asText();
+                                if (fullName.startsWith(prefix)) {
+                                    String relative = fullName.substring(prefix.length());
+                                    if (relative.contains("/")) {
+                                        folders.add(relative.substring(0, relative.indexOf("/") + 1));
+                                    } else if (!relative.isEmpty()) {
+                                        filesAtLevel.add(new String[]{relative, node.get("size").asText() + " B"});
+                                    }
+                                }
+                            }
+                        }
+
+                        for (String f : folders) {
+                            fileTable.getItems().add(new String[]{"[Folder] " + f, "-"});
+                        }
+                        fileTable.getItems().addAll(filesAtLevel);
+                    });
+                } catch (Exception ex) { ex.printStackTrace(); }
             });
         };
 
-        Button refreshBtn = new Button("Refresh");
-        refreshBtn.setOnAction(e -> refreshFiles.run());
-        
-        Button uploadBtn = new Button("Upload File (Simulated)");
-        styleActionBtn(uploadBtn, true);
-        uploadBtn.setOnAction(e -> {
-            new Alert(Alert.AlertType.INFORMATION, "File upload simulated for bucket: " + bucketName).show();
+        fileTable.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String[] selected = fileTable.getSelectionModel().getSelectedItem();
+                if (selected != null && selected[0].startsWith("[Folder] ")) {
+                    String folderName = selected[0].replace("[Folder] ", "");
+                    currentPrefix.set(currentPrefix.get() + folderName);
+                    refreshFilesRef[0].run();
+                }
+            }
         });
 
-        layout.getChildren().addAll(new Label("Files in " + bucketName), fileTable, new HBox(10, refreshBtn, uploadBtn));
-        stage.setScene(new Scene(layout, 500, 400));
-        refreshFiles.run();
+        Button refreshBtn = new Button("Refresh");
+        styleActionBtn(refreshBtn, false);
+        refreshBtn.setOnAction(e -> refreshFilesRef[0].run());
+        
+        Button uploadBtn = new Button("Upload");
+        styleActionBtn(uploadBtn, true);
+
+        layout.getChildren().addAll(new Label("S3 Buckets > " + bucketName), breadcrumbs, fileTable, new HBox(10, refreshBtn, uploadBtn));
+        stage.setScene(new Scene(layout, 600, 450));
+        refreshFilesRef[0].run();
+        stage.show();
+    }
+
+    private void handleInvokeLambda(LambdaFunctionRow row) {
+        if (row == null) return;
+        Stage stage = new Stage();
+        stage.setTitle("Invoke " + row.name);
+        
+        VBox layout = new VBox(15);
+        layout.setPadding(new Insets(20));
+        layout.getStyleClass().add("content-pane");
+        
+        Label title = new Label("Configure Test Event");
+        title.getStyleClass().add("details-title");
+        
+        TextArea payloadArea = new TextArea("{\n  \"key1\": \"value1\",\n  \"key2\": \"value2\"\n}");
+        payloadArea.setStyle("-fx-font-family: 'Consolas', 'Monospace';");
+        payloadArea.setPrefRowCount(8);
+        
+        Button invokeBtn = new Button("Invoke");
+        styleActionBtn(invokeBtn, true);
+        
+        TextArea resultArea = new TextArea("Results will appear here...");
+        resultArea.setEditable(false);
+        resultArea.setPrefRowCount(10);
+        resultArea.setStyle("-fx-font-family: 'Consolas', 'Monospace'; -fx-background-color: #f8f9fa;");
+
+        invokeBtn.setOnAction(e -> {
+            invokeBtn.setDisable(true);
+            resultArea.setText("Invoking...");
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(API_BASE + "/compute/lambda/" + row.name + "/invoke"))
+                .header("Authorization", "Bearer " + jwtToken)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(payloadArea.getText())).build();
+            httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
+                Platform.runLater(() -> {
+                    resultArea.setText(r.body());
+                    invokeBtn.setDisable(false);
+                });
+            });
+        });
+
+        layout.getChildren().addAll(title, new Label("Payload (JSON):"), payloadArea, invokeBtn, new Label("Execution Result:"), resultArea);
+        stage.setScene(new Scene(layout, 550, 600));
         stage.show();
     }
 

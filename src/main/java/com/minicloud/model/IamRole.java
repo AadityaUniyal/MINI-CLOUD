@@ -35,4 +35,15 @@ public class IamRole {
     public void setOwner(String v) { this.owner = v; }
     public List<IamPolicy> getAttachedPolicies() { return attachedPolicies; }
     public void setAttachedPolicies(List<IamPolicy> v) { this.attachedPolicies = v; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private final IamRole r = new IamRole();
+        public Builder name(String v) { r.setName(v); return this; }
+        public Builder description(String v) { r.setDescription(v); return this; }
+        public Builder owner(String v) { r.setOwner(v); return this; }
+        public Builder attachedPolicies(List<IamPolicy> v) { r.setAttachedPolicies(v); return this; }
+        public IamRole build() { return r; }
+    }
 }

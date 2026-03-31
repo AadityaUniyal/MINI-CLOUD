@@ -18,6 +18,7 @@ public class SqsQueue {
     private String owner;
     private LocalDateTime createdAt;
     private Integer visibilityTimeout; // seconds
+    private Integer messageRetentionPeriod; // seconds
 
     public SqsQueue() {}
 
@@ -34,4 +35,21 @@ public class SqsQueue {
     public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }
     public Integer getVisibilityTimeout() { return visibilityTimeout; }
     public void setVisibilityTimeout(Integer v) { this.visibilityTimeout = v; }
+    public Integer getMessageRetentionPeriod() { return messageRetentionPeriod; }
+    public void setMessageRetentionPeriod(Integer v) { this.messageRetentionPeriod = v; }
+
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private final SqsQueue q = new SqsQueue();
+        public Builder name(String v) { q.name = v; return this; }
+        public Builder queueName(String v) { q.name = v; return this; }
+        public Builder queueUrl(String v) { q.queueUrl = v; return this; }
+        public Builder arn(String v) { q.arn = v; return this; }
+        public Builder owner(String v) { q.owner = v; return this; }
+        public Builder createdAt(LocalDateTime v) { q.createdAt = v; return this; }
+        public Builder visibilityTimeout(Integer v) { q.visibilityTimeout = v; return this; }
+        public Builder messageRetentionPeriod(Integer v) { q.messageRetentionPeriod = v; return this; }
+        public SqsQueue build() { return q; }
+    }
 }
