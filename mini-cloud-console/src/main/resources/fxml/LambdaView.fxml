@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.console.controller.LambdaController" spacing="15" styleClass="view-container">
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Lambda Functions" styleClass="header-label"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Button text="Create Function" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <HBox spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 10; -fx-background-radius: 8;">
+        <Button fx:id="invokeButton" text="Invoke" onAction="#handleInvoke" disable="true" styleClass="nav-button" style="-fx-background-color: #8b5cf6; -fx-text-fill: white;"/>
+        <Button fx:id="deleteButton" text="Delete" onAction="#handleDelete" disable="true" styleClass="nav-button" style="-fx-text-fill: #ef4444;"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
+            <TableColumn fx:id="nameColumn" text="Function Name" prefWidth="250"/>
+            <TableColumn fx:id="runtimeColumn" text="Runtime" prefWidth="150"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+        </columns>
+    </TableView>
+</VBox>

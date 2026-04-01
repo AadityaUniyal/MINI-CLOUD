@@ -12,7 +12,20 @@ mvn spring-boot:run
 ```
 
 ### Pre-requisites:
-- **JDK 17+** (JDK 25 is currently being used)
-- **Environment**: Windows Command Prompt or PowerShell
+- **MySQL Server 8.x**: Installed and running on `localhost:3306`.
+  - Database: `minicloud`
+  - User: `root`
+  - Password: `password`
+- **JDK 17+**: (JDK 25 is currently being used).
+- **Maven**: Ensure Maven is configured to handle the multi-module build.
 
-The application will start the Spring Boot backend on `http://localhost:8080` and automatically launch the JavaFX Management Console window.
+### Running the Platform:
+1. Start your **MySQL Server**.
+2. Run the following command from the root folder:
+   ```cmd
+   mvn clean install
+   cd mini-cloud-backend
+   mvn spring-boot:run
+   ```
+
+The application will initialize the schema from `database/init/schema.sql` and `data.sql` on the first run, then launch the **MiniCloud Console**.

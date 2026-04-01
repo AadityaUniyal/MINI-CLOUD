@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.console.controller.Ec2Controller" spacing="15" styleClass="view-container">
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="EC2 Instances" styleClass="header-label"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Button text="Launch Instance" onAction="#handleLaunch" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+    
+    <HBox spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 10; -fx-background-radius: 8;">
+        <Button fx:id="startButton" text="Start" onAction="#handleStart" disable="true" styleClass="nav-button" style="-fx-padding: 5 15;"/>
+        <Button fx:id="stopButton" text="Stop" onAction="#handleStop" disable="true" styleClass="nav-button" style="-fx-padding: 5 15;"/>
+        <Button fx:id="terminateButton" text="Terminate" onAction="#handleTerminate" disable="true" styleClass="nav-button" style="-fx-padding: 5 15; -fx-text-fill: #ef4444;"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
+            <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+            <TableColumn fx:id="stateColumn" text="State" prefWidth="120"/>
+        </columns>
+    </TableView>
+</VBox>

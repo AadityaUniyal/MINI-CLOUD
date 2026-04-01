@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.console.controller.IamDeepController" spacing="15" styleClass="view-container">
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <Label text="IAM Management Console" styleClass="header-label"/>
+
+    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
+        <tabs>
+            <Tab text="Users">
+                <VBox spacing="10">
+                    <padding><Insets top="15" bottom="15" left="15" right="15"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="IAM Users" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="Add User" styleClass="nav-button"/>
+                    </HBox>
+                    <TableView fx:id="userTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="userIdColumn" text="ID" prefWidth="50"/>
+                            <TableColumn fx:id="userNameColumn" text="User Name" prefWidth="150"/>
+                            <TableColumn fx:id="userRoleColumn" text="Attached Policies" prefWidth="200"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            
+            <Tab text="Groups">
+                <VBox spacing="10">
+                    <padding><Insets top="15" bottom="15" left="15" right="15"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="IAM Groups" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="Create Group" styleClass="nav-button"/>
+                    </HBox>
+                    <TableView fx:id="groupTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="groupNameColumn" text="Group Name" prefWidth="200"/>
+                            <TableColumn fx:id="groupUserCountColumn" text="Users" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+            
+            <Tab text="Roles">
+                <VBox spacing="10">
+                    <padding><Insets top="15" bottom="15" left="15" right="15"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="IAM Roles" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="Create Role" styleClass="nav-button"/>
+                    </HBox>
+                    <TableView fx:id="roleTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="roleNameColumn" text="Role Name" prefWidth="180"/>
+                            <TableColumn fx:id="roleArnColumn" text="Role ARN" prefWidth="300"/>
+                            <TableColumn fx:id="roleDateColumn" text="Creation Date" prefWidth="120"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <Tab text="Policies">
+                <VBox spacing="10">
+                    <padding><Insets top="15" bottom="15" left="15" right="15"/></padding>
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="IAM Policies" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <HBox HBox.hgrow="ALWAYS"/>
+                        <Button text="Create Policy" styleClass="nav-button"/>
+                    </HBox>
+                    <TableView fx:id="policyTable" VBox.vgrow="ALWAYS">
+                        <columns>
+                            <TableColumn fx:id="policyNameColumn" text="Policy Name" prefWidth="180"/>
+                            <TableColumn fx:id="policyArnColumn" text="Policy ARN" prefWidth="300"/>
+                            <TableColumn fx:id="policyDescColumn" text="Description" prefWidth="250"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </tabs>
+    </TabPane>
+</VBox>

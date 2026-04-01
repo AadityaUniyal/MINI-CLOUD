@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.console.controller.MonitoringController" spacing="20" styleClass="view-container">
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="CloudWatch Monitoring" styleClass="header-label"/>
+        <HBox HBox.hgrow="ALWAYS"/>
+        <Button text="Refresh Feed" onAction="#loadData" styleClass="nav-button"/>
+    </HBox>
+
+    <GridPane hgap="20" vgap="10">
+        <VBox GridPane.columnIndex="0" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" prefWidth="300">
+            <Label text="Global Resource Health" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+            <VBox spacing="5">
+                <HBox>
+                    <Label text="CPU Utilization" style="-fx-text-fill: white;"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Label text="14%" style="-fx-text-fill: #10b981;"/>
+                </HBox>
+                <ProgressBar progress="0.14" maxWidth="Infinity" style="-fx-accent: #10b981;"/>
+            </VBox>
+            <VBox spacing="5">
+                <HBox>
+                    <Label text="Memory Usage" style="-fx-text-fill: white;"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                    <Label text="42%" style="-fx-text-fill: #3b82f6;"/>
+                </HBox>
+                <ProgressBar progress="0.42" maxWidth="Infinity" style="-fx-accent: #3b82f6;"/>
+            </VBox>
+        </VBox>
+
+        <VBox GridPane.columnIndex="1" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
+            <Label text="Active Alarms" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="●" style="-fx-text-fill: #10b981; -fx-font-size: 18px;"/>
+                <Label text="All systems functional. No active alarms." style="-fx-text-fill: #cbd5e1;"/>
+            </HBox>
+        </VBox>
+    </GridPane>
+
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Recent Action Logs" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+        <TableView fx:id="logTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="timeColumn" text="Timestamp" prefWidth="180"/>
+                <TableColumn fx:id="actionColumn" text="Action" prefWidth="150"/>
+                <TableColumn fx:id="resourceColumn" text="Resource ID" prefWidth="150"/>
+                <TableColumn fx:id="actorColumn" text="Actor" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </VBox>
+</VBox>
