@@ -1,6 +1,6 @@
 package com.minicloud.backend.controller;
 
-import com.minicloud.common.dto.StatsResponse;
+import com.minicloud.backend.model.StatsResponse;
 import com.minicloud.backend.service.OrchestrationService;
 import com.minicloud.backend.service.StatsService;
 import org.springframework.http.ResponseEntity;

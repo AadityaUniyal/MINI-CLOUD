@@ -20,8 +20,8 @@ public class BillingService {
     private final DatabaseInstanceRepository databaseInstanceRepository;
 
     // Backward compatibility (Week 1/2) - Now using BillingRecord
-    public void startBilling(com.minicloud.model.User user, String resId, String type) {
-        createRecord(user.getUsername(), type, resId, 0.0); // 0 initial cost
+    public void startBilling(String username, String resId, String type) {
+        createRecord(username, type, resId, 0.0); // 0 initial cost
     }
 
     public void stopBilling(String resId) {

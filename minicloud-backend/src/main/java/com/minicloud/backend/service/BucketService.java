@@ -5,7 +5,6 @@ import com.minicloud.backend.model.StorageFile;
 import com.minicloud.backend.model.AuditLog;
 import com.minicloud.backend.repository.AuditLogRepository;
 import com.minicloud.backend.repository.BucketRepository;
-import com.minicloud.backend.repository.UserRepository;
 import com.minicloud.backend.repository.StorageFileRepository;
 import com.minicloud.backend.repository.BucketVersionRepository;
 import com.minicloud.backend.repository.BucketPolicyRepository;
@@ -30,20 +29,17 @@ public class BucketService {
     private final BucketRepository bucketRepository;
     private final StorageFileRepository storageFileRepository;
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
     private final BucketVersionRepository bucketVersionRepository;
     private final BucketPolicyRepository bucketPolicyRepository;
 
     public BucketService(BucketRepository bucketRepository, 
                          StorageFileRepository storageFileRepository, 
                          AuditLogRepository auditLogRepository,
-                         UserRepository userRepository,
                          BucketVersionRepository bucketVersionRepository,
                          BucketPolicyRepository bucketPolicyRepository) {
         this.bucketRepository = bucketRepository;
         this.storageFileRepository = storageFileRepository;
         this.auditLogRepository = auditLogRepository;
-        this.userRepository = userRepository;
         this.bucketVersionRepository = bucketVersionRepository;
         this.bucketPolicyRepository = bucketPolicyRepository;
     }
@@ -63,15 +59,13 @@ public class BucketService {
                 .createdAt(LocalDateTime.now())
                 .build();
         
-        userRepository.findByUsername(owner).ifPresent(user -> {
-            auditLogRepository.save(AuditLog.builder()
-                .user(user)
-                .action("CREATE_BUCKET")
-                .resourceId(name)
-                .details("Created storage bucket: " + name + " in region: " + (region != null ? region : "us-east-1"))
-                .timestamp(LocalDateTime.now())
-                .build());
-        });
+        auditLogRepository.save(AuditLog.builder()
+            .username(owner)
+            .action("CREATE_BUCKET")
+            .resourceId(name)
+            .details("Created storage bucket: " + name + " in region: " + (region != null ? region : "us-east-1"))
+            .timestamp(LocalDateTime.now())
+            .build());
 
         return bucketRepository.save(bucket);
     }
@@ -112,15 +106,13 @@ public class BucketService {
                 .uploadedAt(LocalDateTime.now())
                 .build();
 
-        userRepository.findByUsername(userId).ifPresent(user -> {
-            auditLogRepository.save(AuditLog.builder()
-                .user(user)
+        auditLogRepository.save(AuditLog.builder()
+                .username(userId)
                 .action("UPLOAD_FILE")
                 .resourceId(fileName)
                 .details("Uploaded " + fileName + " to bucket " + bucketName)
                 .timestamp(LocalDateTime.now())
                 .build());
-        });
 
         return storageFileRepository.save(storageFile);
     }
@@ -193,15 +185,13 @@ public class BucketService {
                     bucketRepository.delete(bucket);
 
                     // Audit Log
-                    userRepository.findByUsername(owner).ifPresent(user -> {
-                        auditLogRepository.save(AuditLog.builder()
-                            .user(user)
-                            .action("DELETE_BUCKET")
-                            .resourceId(name)
-                            .details("Deleted bucket and all files: " + name)
-                            .timestamp(LocalDateTime.now())
-                            .build());
-                    });
+                    auditLogRepository.save(AuditLog.builder()
+                        .username(owner)
+                        .action("DELETE_BUCKET")
+                        .resourceId(name)
+                        .details("Deleted bucket and all files: " + name)
+                        .timestamp(LocalDateTime.now())
+                        .build());
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to delete bucket files", e);
                 }

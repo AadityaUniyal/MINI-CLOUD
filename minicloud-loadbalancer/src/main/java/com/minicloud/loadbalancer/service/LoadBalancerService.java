@@ -4,7 +4,6 @@ import com.minicloud.loadbalancer.model.LoadBalancer;
 import com.minicloud.loadbalancer.repository.LoadBalancerRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class LoadBalancerService {

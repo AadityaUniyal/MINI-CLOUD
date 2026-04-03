@@ -1,17 +1,9 @@
 package com.minicloud.iam.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "permissions")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,4 +15,18 @@ public class Permission {
     private String resource;
     private String action;
     private String description;
+
+    public Permission() {}
+    public Permission(String name) { this.name = name; }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getResource() { return resource; }
+    public void setResource(String resource) { this.resource = resource; }
+    public String getAction() { return action; }
+    public void setAction(String action) { this.action = action; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

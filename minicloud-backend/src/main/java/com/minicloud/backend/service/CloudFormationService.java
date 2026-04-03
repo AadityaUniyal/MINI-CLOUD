@@ -1,6 +1,7 @@
 package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.CfStack;
+import com.minicloud.backend.model.ComputeInstance;
 import com.minicloud.backend.repository.CfStackRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +46,7 @@ public class CloudFormationService {
                     
                     if ("AWS::EC2::Instance".equals(type)) {
                         String name = resource.get("Properties").get("Name").asText();
-                        com.minicloud.model.ComputeInstance instance = computeService.launchInstance(owner, name, "vpc-default", "subnet-default", null);
+                        ComputeInstance instance = computeService.launchInstance(owner, name, "vpc-default", "subnet-default", null);
                         stack.getResourceMapping().put(logicalId, instance.getContainerId());
                     } else if ("AWS::S3::Bucket".equals(type)) {
                         String name = resource.get("Properties").get("BucketName").asText();

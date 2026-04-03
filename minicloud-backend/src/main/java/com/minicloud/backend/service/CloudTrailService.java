@@ -1,7 +1,6 @@
 package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.AuditLog;
-import com.minicloud.backend.model.User;
 import com.minicloud.backend.repository.AuditLogRepository;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -15,9 +14,9 @@ public class CloudTrailService {
         this.auditLogRepository = auditLogRepository;
     }
 
-    public void logEvent(User user, String action, String resourceId, String details, String ip, String ua, String params) {
+    public void logEvent(String username, String action, String resourceId, String details, String ip, String ua, String params) {
         AuditLog log = AuditLog.builder()
-                .user(user)
+                .username(username)
                 .action(action)
                 .resourceId(resourceId)
                 .details(details)

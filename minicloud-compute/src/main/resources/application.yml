@@ -5,9 +5,9 @@ spring:
   application:
     name: minicloud-compute
   datasource:
-    url: jdbc:postgresql://localhost:5432/minicloud_compute
-    username: minicloud_admin
-    password: minicloud_password
+    url: jdbc:postgresql://localhost:5432/minicloud
+    username: postgres
+    password: password
   jpa:
     hibernate:
       ddl-auto: update

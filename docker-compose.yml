@@ -81,8 +81,10 @@ services:
   # Eureka Discovery Server
   eureka-server:
     build:
-      context: ./minicloud-eureka-server
-      dockerfile: ../docker/app/Dockerfile
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-eureka-server
     container_name: minicloud-eureka
     ports:
       - "8761:8761"
@@ -93,8 +95,10 @@ services:
   # IAM Service
   iam-service:
     build:
-      context: ./minicloud-iam
-      dockerfile: ../docker/app/Dockerfile
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-iam
     container_name: minicloud-iam
     ports:
       - "8081:8081"
@@ -111,8 +115,10 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ./minicloud-api-gateway
-      dockerfile: ../docker/app/Dockerfile
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-api-gateway
     container_name: minicloud-gateway
     ports:
       - "8080:8080"
@@ -125,8 +131,10 @@ services:
   # Backend Service (Core Logic)
   backend-service:
     build:
-      context: ./minicloud-backend
-      dockerfile: ../docker/app/Dockerfile
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-backend
     container_name: minicloud-backend
     ports:
       - "8082:8082"
@@ -143,14 +151,72 @@ services:
   # Compute Service
   compute-service:
     build:
-      context: ./minicloud-compute
-      dockerfile: ../docker/app/Dockerfile
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-compute
     container_name: minicloud-compute
     ports:
       - "8083:8083"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    restart: on-failure
+
+  # Database Management Service
+  database-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-database-service
+    container_name: minicloud-database
+    ports:
+      - "8085:8085"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    restart: on-failure
+
+  # Monitoring Service
+  monitoring-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-monitoring
+    container_name: minicloud-monitoring
+    ports:
+      - "8087:8087"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    restart: on-failure
+
+  # Billing Service
+  billing-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-billing
+    container_name: minicloud-billing
+    ports:
+      - "8090:8090"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
     depends_on:
       postgres-db:
         condition: service_healthy

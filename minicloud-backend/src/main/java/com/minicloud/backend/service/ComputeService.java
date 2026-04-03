@@ -1,9 +1,9 @@
 package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.ComputeInstance;
+import com.minicloud.backend.model.AuditLog;
 import com.minicloud.backend.repository.AuditLogRepository;
 import com.minicloud.backend.repository.ComputeInstanceRepository;
-import com.minicloud.backend.repository.UserRepository;
 import com.minicloud.backend.service.storage.VolumeService;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -16,7 +16,6 @@ public class ComputeService {
     private final ComputeInstanceRepository computeInstanceRepository;
     private final BillingService billingService;
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
     private final VolumeService volumeService;
     private static int NEXT_PORT = 8081;
 
@@ -24,13 +23,11 @@ public class ComputeService {
                           ComputeInstanceRepository computeInstanceRepository,
                           BillingService billingService,
                           AuditLogRepository auditLogRepository,
-                          UserRepository userRepository,
                           VolumeService volumeService) {
         this.dockerService = dockerService;
         this.computeInstanceRepository = computeInstanceRepository;
         this.billingService = billingService;
         this.auditLogRepository = auditLogRepository;
-        this.userRepository = userRepository;
         this.volumeService = volumeService;
         initializeNextPort();
     }
@@ -78,16 +75,14 @@ public class ComputeService {
         ComputeInstance savedInstance = computeInstanceRepository.save(instance);
 
         // Audit Log & Billing
-        userRepository.findByUsername(owner).ifPresent(user -> {
-            auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                    .user(user)
-                    .action("LAUNCH_COMPUTE")
-                    .resourceId(containerId)
-                    .timestamp(LocalDateTime.now())
-                    .details("Launched Tomcat instance: " + name)
-                    .build());
-            billingService.startBilling(user, containerId, "COMPUTE");
-        });
+        auditLogRepository.save(AuditLog.builder()
+                .username(owner)
+                .action("LAUNCH_COMPUTE")
+                .resourceId(containerId)
+                .timestamp(LocalDateTime.now())
+                .details("Launched Tomcat instance: " + name)
+                .build());
+        billingService.startBilling(owner, containerId, "COMPUTE");
 
         return savedInstance;
     }
@@ -112,16 +107,14 @@ public class ComputeService {
                 handleVolumeCleanup(instance.getContainerId(), owner);
 
                 // Audit Log & Billing
-                userRepository.findByUsername(owner).ifPresent(user -> {
-                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                            .user(user)
-                            .action("TERMINATE_COMPUTE")
-                            .resourceId(instance.getContainerId())
-                            .timestamp(LocalDateTime.now())
-                            .details("Terminated instance: " + instance.getName())
-                            .build());
-                    billingService.stopBilling(instance.getContainerId());
-                });
+                auditLogRepository.save(AuditLog.builder()
+                        .username(owner)
+                        .action("TERMINATE_COMPUTE")
+                        .resourceId(instance.getContainerId())
+                        .timestamp(LocalDateTime.now())
+                        .details("Terminated instance: " + instance.getName())
+                        .build());
+                billingService.stopBilling(instance.getContainerId());
             }
         });
     }
@@ -137,16 +130,14 @@ public class ComputeService {
             handleVolumeCleanup(instance.getContainerId(), instance.getOwner());
 
             // Audit Log & Billing
-            userRepository.findByUsername(instance.getOwner()).ifPresent(user -> {
-                auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                        .user(user)
-                        .action("TERMINATE_COMPUTE")
-                        .resourceId(instance.getContainerId())
-                        .timestamp(LocalDateTime.now())
-                        .details("Terminated instance: " + name)
-                        .build());
-                billingService.stopBilling(instance.getContainerId());
-            });
+            auditLogRepository.save(AuditLog.builder()
+                    .username(instance.getOwner())
+                    .action("TERMINATE_COMPUTE")
+                    .resourceId(instance.getContainerId())
+                    .timestamp(LocalDateTime.now())
+                    .details("Terminated instance: " + name)
+                    .build());
+            billingService.stopBilling(instance.getContainerId());
         });
     }
 
@@ -157,16 +148,14 @@ public class ComputeService {
                 instance.setStatus("STOPPED");
                 computeInstanceRepository.save(instance);
 
-                userRepository.findByUsername(owner).ifPresent(user -> {
-                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                            .user(user)
-                            .action("STOP_COMPUTE")
-                            .resourceId(instance.getContainerId())
-                            .timestamp(LocalDateTime.now())
-                            .details("Stopped instance: " + instance.getName())
-                            .build());
-                    billingService.stopBilling(instance.getContainerId());
-                });
+                auditLogRepository.save(AuditLog.builder()
+                        .username(owner)
+                        .action("STOP_COMPUTE")
+                        .resourceId(instance.getContainerId())
+                        .timestamp(LocalDateTime.now())
+                        .details("Stopped instance: " + instance.getName())
+                        .build());
+                billingService.stopBilling(instance.getContainerId());
             }
         });
     }
@@ -178,16 +167,14 @@ public class ComputeService {
                 instance.setStatus("RUNNING");
                 computeInstanceRepository.save(instance);
 
-                userRepository.findByUsername(owner).ifPresent(user -> {
-                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                            .user(user)
-                            .action("START_COMPUTE")
-                            .resourceId(instance.getContainerId())
-                            .timestamp(LocalDateTime.now())
-                            .details("Started instance: " + instance.getName())
-                            .build());
-                    billingService.startBilling(user, instance.getContainerId(), "COMPUTE");
-                });
+                auditLogRepository.save(AuditLog.builder()
+                        .username(owner)
+                        .action("START_COMPUTE")
+                        .resourceId(instance.getContainerId())
+                        .timestamp(LocalDateTime.now())
+                        .details("Started instance: " + instance.getName())
+                        .build());
+                billingService.startBilling(owner, instance.getContainerId(), "COMPUTE");
             }
         });
     }

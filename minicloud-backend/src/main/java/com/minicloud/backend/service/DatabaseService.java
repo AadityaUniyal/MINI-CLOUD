@@ -1,9 +1,9 @@
 package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.DatabaseInstance;
+import com.minicloud.backend.model.AuditLog;
 import com.minicloud.backend.repository.AuditLogRepository;
 import com.minicloud.backend.repository.DatabaseInstanceRepository;
-import com.minicloud.backend.repository.UserRepository;
 import com.minicloud.common.dto.ProvisionDbRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,19 +17,16 @@ public class DatabaseService {
     private final DatabaseInstanceRepository databaseInstanceRepository;
     private final BillingService billingService;
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
     private static int NEXT_PORT = 33061;
 
     public DatabaseService(DockerService dockerService, 
                            DatabaseInstanceRepository databaseInstanceRepository,
                            BillingService billingService,
-                           AuditLogRepository auditLogRepository,
-                           UserRepository userRepository) {
+                           AuditLogRepository auditLogRepository) {
         this.dockerService = dockerService;
         this.databaseInstanceRepository = databaseInstanceRepository;
         this.billingService = billingService;
         this.auditLogRepository = auditLogRepository;
-        this.userRepository = userRepository;
         initializeNextPort();
     }
 
@@ -74,16 +71,14 @@ public class DatabaseService {
             DatabaseInstance savedInstance = databaseInstanceRepository.save(instance);
 
             // Audit Log & Billing
-            userRepository.findByUsername(owner).ifPresent(user -> {
-                auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                        .user(user)
-                        .action("PROVISION_DATABASE")
-                        .resourceId(containerId)
-                        .timestamp(LocalDateTime.now())
-                        .details("Provisioned " + instance.getEngine() + " instance: " + request.getName())
-                        .build());
-                billingService.startBilling(user, containerId, "DATABASE");
-            });
+            auditLogRepository.save(AuditLog.builder()
+                    .username(owner)
+                    .action("PROVISION_DATABASE")
+                    .resourceId(containerId)
+                    .timestamp(LocalDateTime.now())
+                    .details("Provisioned " + instance.getEngine() + " instance: " + request.getName())
+                    .build());
+            billingService.startBilling(owner, containerId, "DATABASE");
 
             return savedInstance;
         }
@@ -104,16 +99,14 @@ public class DatabaseService {
             databaseInstanceRepository.save(instance);
 
             // Audit Log & Billing
-            userRepository.findByUsername(instance.getOwner()).ifPresent(user -> {
-                auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                        .user(user)
-                        .action("STOP_DATABASE")
-                        .resourceId(instance.getContainerId())
-                        .timestamp(LocalDateTime.now())
-                        .details("Stopped database: " + name)
-                        .build());
-                billingService.stopBilling(instance.getContainerId());
-            });
+            auditLogRepository.save(AuditLog.builder()
+                    .username(instance.getOwner())
+                    .action("STOP_DATABASE")
+                    .resourceId(instance.getContainerId())
+                    .timestamp(LocalDateTime.now())
+                    .details("Stopped database: " + name)
+                    .build());
+            billingService.stopBilling(instance.getContainerId());
         });
     }
 
@@ -125,16 +118,14 @@ public class DatabaseService {
                 dockerService.removeContainer(instance.getContainerId());
                 
                 // Audit Log & Billing
-                userRepository.findByUsername(owner).ifPresent(user -> {
-                    auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                            .user(user)
-                            .action("TERMINATE_DATABASE")
-                            .resourceId(instance.getContainerId())
-                            .timestamp(LocalDateTime.now())
-                            .details("Terminated database: " + instance.getName())
-                            .build());
-                    billingService.stopBilling(instance.getContainerId());
-                });
+                auditLogRepository.save(AuditLog.builder()
+                        .username(owner)
+                        .action("TERMINATE_DATABASE")
+                        .resourceId(instance.getContainerId())
+                        .timestamp(LocalDateTime.now())
+                        .details("Terminated database: " + instance.getName())
+                        .build());
+                billingService.stopBilling(instance.getContainerId());
 
                 databaseInstanceRepository.delete(instance);
             }
@@ -148,16 +139,14 @@ public class DatabaseService {
             dockerService.removeContainer(instance.getContainerId());
             
             // Audit Log & Billing
-            userRepository.findByUsername(instance.getOwner()).ifPresent(user -> {
-                auditLogRepository.save(com.minicloud.model.AuditLog.builder()
-                        .user(user)
-                        .action("TERMINATE_DATABASE")
-                        .resourceId(instance.getContainerId())
-                        .timestamp(LocalDateTime.now())
-                        .details("Terminated database: " + name)
-                        .build());
-                billingService.stopBilling(instance.getContainerId());
-            });
+            auditLogRepository.save(AuditLog.builder()
+                    .username(instance.getOwner())
+                    .action("TERMINATE_DATABASE")
+                    .resourceId(instance.getContainerId())
+                    .timestamp(LocalDateTime.now())
+                    .details("Terminated database: " + name)
+                    .build());
+            billingService.stopBilling(instance.getContainerId());
 
             databaseInstanceRepository.delete(instance);
         });

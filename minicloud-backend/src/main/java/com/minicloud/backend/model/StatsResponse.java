@@ -1,4 +1,4 @@
-package com.minicloud.backend.dto;
+package com.minicloud.backend.model;
 
 public class StatsResponse {
     private String containerId;

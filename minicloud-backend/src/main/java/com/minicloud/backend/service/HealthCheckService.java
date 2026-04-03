@@ -2,10 +2,8 @@ package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.AuditLog;
 import com.minicloud.backend.model.ComputeInstance;
-import com.minicloud.backend.model.User;
 import com.minicloud.backend.repository.AuditLogRepository;
 import com.minicloud.backend.repository.ComputeInstanceRepository;
-import com.minicloud.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,16 +19,13 @@ public class HealthCheckService {
     private final DockerService dockerService;
     private final ComputeInstanceRepository computeInstanceRepository;
     private final AuditLogRepository auditLogRepository;
-    private final UserRepository userRepository;
 
     public HealthCheckService(DockerService dockerService, 
                             ComputeInstanceRepository computeInstanceRepository,
-                            AuditLogRepository auditLogRepository,
-                            UserRepository userRepository) {
+                            AuditLogRepository auditLogRepository) {
         this.dockerService = dockerService;
         this.computeInstanceRepository = computeInstanceRepository;
         this.auditLogRepository = auditLogRepository;
-        this.userRepository = userRepository;
     }
 
     /**
@@ -57,17 +52,14 @@ public class HealthCheckService {
                     logger.info("Auto-Healing: Successfully restarted {}.", instance.getName());
                     
                     // Log Auto-Healing Event for UI Timeline
-                    Optional<User> owner = userRepository.findByUsername(instance.getOwner());
-                    owner.ifPresent(user -> {
-                        AuditLog log = AuditLog.builder()
-                                .user(user)
-                                .action("AUTO_HEAL")
-                                .resourceId(instance.getName())
-                                .timestamp(LocalDateTime.now())
-                                .details("Critically unhealthy container restarted automatically by MiniCloud Healer.")
-                                .build();
-                        auditLogRepository.save(log);
-                    });
+                    AuditLog log = AuditLog.builder()
+                            .username(instance.getOwner())
+                            .action("AUTO_HEAL")
+                            .resourceId(instance.getName())
+                            .timestamp(LocalDateTime.now())
+                            .details("Critically unhealthy container restarted automatically by MiniCloud Healer.")
+                            .build();
+                    auditLogRepository.save(log);
 
                 } catch (Exception e) {
                     logger.error("Auto-Healing: Failed for {}: {}", instance.getName(), e.getMessage());

@@ -34,7 +34,11 @@ public class DatabaseService {
         String imageName = engine.equalsIgnoreCase("mysql") ? "mysql:8.0" : "postgres:14-alpine";
         String containerName = "db-" + UUID.randomUUID().toString().substring(0, 8);
         
-        dockerClient.pullImageCmd(imageName).start().onComplete();
+        try {
+            dockerClient.pullImageCmd(imageName).start().awaitCompletion();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
         String[] env = engine.equalsIgnoreCase("mysql") ? 
             new String[]{"MYSQL_ROOT_PASSWORD=" + password, "MYSQL_DATABASE=" + dbName, "MYSQL_USER=" + user, "MYSQL_PASSWORD=" + password} :

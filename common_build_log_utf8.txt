@@ -1,0 +1,27 @@
+﻿docker-compose : time="202
+6-04-03T21:32:14+05:30" 
+level=warning msg="C:\\Use
+rs\\HP\\OneDrive\\Desktop\
+\JAVA-PBL\\docker-compose.
+yml: the attribute 
+`version` is obsolete, it 
+will be ignored, please 
+remove it to avoid 
+potential confusion"
+At line:1 char:1
++ docker-compose build 
+--no-cache common > 
+common_build_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (t  
+  ime="2026-04-0...tial   
+  confusion":String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+no such service: common

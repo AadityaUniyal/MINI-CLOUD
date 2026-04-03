@@ -10,26 +10,35 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "username")
+    private String username;
 
     private String action;
     private String resourceId;
     private String details;
+    private String sourceIp;
+    private String userAgent;
+    @Column(columnDefinition = "TEXT")
+    private String requestParameters;
     private LocalDateTime timestamp;
 
     public AuditLog() {}
 
     public Long getId() { return id; }
-    public User getUser() { return user; }
-    public void setUser(User v) { this.user = v; }
+    public String getUsername() { return username; }
+    public void setUsername(String v) { this.username = v; }
     public String getAction() { return action; }
     public void setAction(String v) { this.action = v; }
     public String getResourceId() { return resourceId; }
     public void setResourceId(String v) { this.resourceId = v; }
     public String getDetails() { return details; }
     public void setDetails(String v) { this.details = v; }
+    public String getSourceIp() { return sourceIp; }
+    public void setSourceIp(String v) { this.sourceIp = v; }
+    public String getUserAgent() { return userAgent; }
+    public void setUserAgent(String v) { this.userAgent = v; }
+    public String getRequestParameters() { return requestParameters; }
+    public void setRequestParameters(String v) { this.requestParameters = v; }
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime v) { this.timestamp = v; }
 
@@ -37,10 +46,13 @@ public class AuditLog {
 
     public static class AuditLogBuilder {
         private final AuditLog log = new AuditLog();
-        public AuditLogBuilder user(User val) { log.user = val; return this; }
+        public AuditLogBuilder username(String val) { log.username = val; return this; }
         public AuditLogBuilder action(String val) { log.action = val; return this; }
         public AuditLogBuilder resourceId(String val) { log.resourceId = val; return this; }
         public AuditLogBuilder details(String val) { log.details = val; return this; }
+        public AuditLogBuilder sourceIp(String val) { log.sourceIp = val; return this; }
+        public AuditLogBuilder userAgent(String val) { log.userAgent = val; return this; }
+        public AuditLogBuilder requestParameters(String val) { log.requestParameters = val; return this; }
         public AuditLogBuilder timestamp(LocalDateTime val) { log.timestamp = val; return this; }
         public AuditLog build() { 
             if (log.timestamp == null) log.timestamp = LocalDateTime.now();

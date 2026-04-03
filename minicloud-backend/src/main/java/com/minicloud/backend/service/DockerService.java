@@ -4,7 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Statistics;
+// Fully qualified Statistics used below to resolve symbol issues
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -195,14 +195,14 @@ public class DockerService {
         getClient().restartContainerCmd(containerId).exec();
     }
 
-    public Statistics getContainerStats(String containerId) {
+    public com.github.dockerjava.api.model.Statistics getContainerStats(String containerId) {
         if (containerId.startsWith("sim-")) return null; // Can't map full Docker stats to HTTP Server
         if (!dockerAvailable) return null;
         try {
-            final Statistics[] statsHolder = new Statistics[1];
-            dockerClient.statsCmd(containerId).withNoStream(true).exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<Statistics>() {
+            final com.github.dockerjava.api.model.Statistics[] statsHolder = new com.github.dockerjava.api.model.Statistics[1];
+            dockerClient.statsCmd(containerId).withNoStream(true).exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<com.github.dockerjava.api.model.Statistics>() {
                 @Override
-                public void onNext(Statistics stats) {
+                public void onNext(com.github.dockerjava.api.model.Statistics stats) {
                     statsHolder[0] = stats;
                     try { close(); } catch (IOException e) { }
                 }

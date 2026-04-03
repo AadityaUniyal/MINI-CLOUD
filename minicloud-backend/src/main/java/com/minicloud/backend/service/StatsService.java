@@ -1,7 +1,7 @@
 package com.minicloud.backend.service;
 
-import com.github.dockerjava.api.model.Statistics;
-import com.minicloud.common.dto.StatsResponse;
+// Revised to use the local model
+import com.minicloud.backend.model.StatsResponse;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class StatsService {
     }
 
     public StatsResponse getContainerMetrics(String containerId) {
-        Statistics stats = dockerService.getContainerStats(containerId);
+        com.github.dockerjava.api.model.Statistics stats = dockerService.getContainerStats(containerId);
         if (stats == null) {
             return StatsResponse.builder()
                     .containerId(containerId)

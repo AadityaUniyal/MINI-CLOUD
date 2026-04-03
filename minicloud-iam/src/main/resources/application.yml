@@ -5,10 +5,10 @@ spring:
   application:
     name: minicloud-iam
   datasource:
-    url: jdbc:mysql://localhost:3306/minicloud_iam?createDatabaseIfNotExist=true
-    username: minicloud_admin
-    password: minicloud_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/minicloud
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
