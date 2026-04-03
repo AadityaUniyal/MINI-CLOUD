@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  # Relational Database (PostgreSQL for Metadata)
+  postgres-db:
+    image: postgres:14-alpine
+    container_name: minicloud-postgres
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=minicloud
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d minicloud"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Relational Database (MySQL for Billing/IAM)
+  mysql-db:
+    image: mysql:8.0
+    container_name: minicloud-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=minicloud_iam
+      - MYSQL_USER=minicloud
+      - MYSQL_PASSWORD=password
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # NoSQL Database (MongoDB for Logs & Analytics)
+  mongodb:
+    image: mongo:latest
+    container_name: minicloud-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+
+  # Caching (Redis)
+  redis:
+    image: redis:alpine
+    container_name: minicloud-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # Object Storage (MinIO)
+  minio:
+    image: minio/minio
+    container_name: minicloud-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: always
+
+  # Message Broker (RabbitMQ)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: minicloud-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+
+  # Eureka Discovery Server
+  eureka-server:
+    build:
+      context: ./minicloud-eureka-server
+      dockerfile: ../docker/app/Dockerfile
+    container_name: minicloud-eureka
+    ports:
+      - "8761:8761"
+    depends_on:
+      - postgres-db
+    restart: on-failure
+
+  # IAM Service
+  iam-service:
+    build:
+      context: ./minicloud-iam
+      dockerfile: ../docker/app/Dockerfile
+    container_name: minicloud-iam
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    restart: on-failure
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./minicloud-api-gateway
+      dockerfile: ../docker/app/Dockerfile
+    container_name: minicloud-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    restart: on-failure
+
+  # Backend Service (Core Logic)
+  backend-service:
+    build:
+      context: ./minicloud-backend
+      dockerfile: ../docker/app/Dockerfile
+    container_name: minicloud-backend
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    restart: on-failure
+
+  # Compute Service
+  compute-service:
+    build:
+      context: ./minicloud-compute
+      dockerfile: ../docker/app/Dockerfile
+    container_name: minicloud-compute
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    restart: on-failure
+
+networks:
+  default:
+    name: minicloud-network
+
+volumes:
+  mongodb_data:
+  minio_data:

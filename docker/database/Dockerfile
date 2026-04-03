@@ -1,16 +1,19 @@
-# Custom Database Instance Dockerfile
-# Based on MySQL 8.0
-FROM mysql:8.0
+# Custom PostgreSQL Database Instance Dockerfile
+FROM postgres:15-alpine
 
 LABEL maintainer="MiniCloud"
 LABEL version="1.0"
-LABEL description="Custom Database Instance for MiniCloud Infrastructure"
+LABEL description="Custom PostgreSQL Instance for MiniCloud Infrastructure"
 
-# Set custom MySQL configurations
-ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=minicloud_db
+# Set custom PostgreSQL configurations
+ENV POSTGRES_PASSWORD=password
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_DB=minicloud
 
-# Expose the standard MySQL port
-EXPOSE 3306
+# Expose the standard PostgreSQL port
+EXPOSE 5432
 
-CMD ["mysqld"]
+# Copy initialization scripts
+COPY init/*.sql /docker-entrypoint-initdb.d/
+
+CMD ["postgres"]

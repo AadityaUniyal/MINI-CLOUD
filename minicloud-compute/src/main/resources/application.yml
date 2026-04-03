@@ -1,0 +1,19 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: minicloud-compute
+  datasource:
+    url: jdbc:postgresql://localhost:5432/minicloud_compute
+    username: minicloud_admin
+    password: minicloud_password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

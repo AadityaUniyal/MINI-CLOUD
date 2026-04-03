@@ -1,0 +1,73 @@
+package com.minicloud.backend.service.monitoring;
+
+import com.minicloud.common.dto.StatsResponse;
+import com.minicloud.backend.model.ComputeInstance;
+import com.minicloud.backend.model.DatabaseInstance;
+import com.minicloud.backend.repository.ComputeInstanceRepository;
+import com.minicloud.backend.repository.DatabaseInstanceRepository;
+import com.minicloud.backend.service.StatsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class MetricCollectionTask {
+
+    private static final Logger logger = LoggerFactory.getLogger(MetricCollectionTask.class);
+    private final ComputeInstanceRepository computeInstanceRepository;
+    private final DatabaseInstanceRepository databaseInstanceRepository;
+    private final StatsService statsService;
+    private final MetricService metricService;
+
+    public MetricCollectionTask(ComputeInstanceRepository computeInstanceRepository,
+                                DatabaseInstanceRepository databaseInstanceRepository,
+                                StatsService statsService,
+                                MetricService metricService) {
+        this.computeInstanceRepository = computeInstanceRepository;
+        this.databaseInstanceRepository = databaseInstanceRepository;
+        this.statsService = statsService;
+        this.metricService = metricService;
+    }
+
+    /**
+     * Collects CPU and Memory metrics every 30 seconds for all active containers.
+     */
+    @Scheduled(fixedRate = 30000)
+    public void collectMetrics() {
+        logger.info("MetricCollectionTask: Starting metric collection cycle...");
+
+        // 1. Collect from Compute Instances
+        List<ComputeInstance> computeInstances = computeInstanceRepository.findAll();
+        for (ComputeInstance instance : computeInstances) {
+            if ("RUNNING".equalsIgnoreCase(instance.getStatus())) {
+                recordStats(instance.getContainerId(), instance.getName());
+            }
+        }
+
+        // 2. Collect from Database Instances
+        List<DatabaseInstance> databaseInstances = databaseInstanceRepository.findAll();
+        for (DatabaseInstance instance : databaseInstances) {
+            if ("RUNNING".equalsIgnoreCase(instance.getStatus())) {
+                recordStats(instance.getContainerId(), instance.getName());
+            }
+        }
+
+        logger.info("MetricCollectionTask: Cycle complete.");
+    }
+
+    private void recordStats(String containerId, String name) {
+        try {
+            StatsResponse stats = statsService.getContainerMetrics(containerId);
+            if ("ACTIVE".equalsIgnoreCase(stats.getStatus())) {
+                metricService.recordMetric(name, "CPUUtilization", stats.getCpuUsage(), "Percent");
+                metricService.recordMetric(name, "MemoryUsage", (double) stats.getMemoryUsage(), "Bytes");
+                logger.debug("Metrics recorded for {}: CPU {}%, Memory {} bytes", name, stats.getCpuUsage(), stats.getMemoryUsage());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to collect metrics for {}: {}", name, e.getMessage());
+        }
+    }
+}

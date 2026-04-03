@@ -9,28 +9,55 @@
         <relativePath/>
     </parent>
     <groupId>com.minicloud</groupId>
-    <artifactId>mini-cloud-project</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <artifactId>minicloud-platform</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>MiniCloud Project</name>
+    <name>MiniCloud Platform</name>
 
     <modules>
-        <module>mini-cloud-common</module>
-        <module>mini-cloud-backend</module>
-        <module>mini-cloud-console</module>
+        <module>minicloud-common</module>
+        <module>minicloud-backend</module>
+        <module>minicloud-admin-console</module>
+        <module>minicloud-eureka-server</module>
+        <module>minicloud-api-gateway</module>
+        <module>minicloud-iam</module>
+        <module>minicloud-compute</module>
+        <module>minicloud-storage</module>
+        <module>minicloud-database-service</module>
+        <module>minicloud-loadbalancer</module>
+        <module>minicloud-monitoring</module>
+        <module>minicloud-billing</module>
+        <module>minicloud-portal</module>
+        <module>minicloud-notification</module>
     </modules>
 
     <properties>
         <java.version>17</java.version>
         <javafx.version>21.0.2</javafx.version>
+        <spring-cloud.version>2023.0.0</spring-cloud.version>
+        <vaadin.version>24.3.5</vaadin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.minicloud</groupId>
-                <artifactId>mini-cloud-common</artifactId>
+                <artifactId>minicloud-common</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -49,5 +76,22 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

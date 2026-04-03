@@ -1,0 +1,1523 @@
+================================================================================
+         CLOUD PLATFORM PROJECT - COMPREHENSIVE SPECIFICATION
+    Building an AWS-like Cloud Service Platform with Java Technologies
+================================================================================
+
+PROJECT OVERVIEW:
+================================================================================
+Project Name: MiniCloud - Enterprise Cloud Platform
+Description: A comprehensive cloud computing platform similar to AWS that provides
+infrastructure services including compute instances, object storage, managed
+databases, load balancing, and monitoring capabilities. Built entirely using
+Java-based technologies.
+
+Target Users: Developers, Organizations, DevOps Teams
+Core Value Proposition: Self-hosted, cost-effective alternative to AWS with
+similar features and APIs
+
+
+SYSTEM ARCHITECTURE:
+================================================================================
+
+1. THREE-TIER ARCHITECTURE:
+   
+   PRESENTATION LAYER:
+   - JavaFX Desktop Application (Admin Console)
+   - Vaadin Web Application (User Portal)
+   - RESTful API Endpoints
+   
+   BUSINESS LOGIC LAYER:
+   - Spring Boot Microservices
+   - Service Orchestration
+   - Business Rules Engine
+   - Event Processing
+   
+   DATA LAYER:
+   - MySQL Database (Relational Data)
+   - PostgreSQL (Metadata & Configuration)
+   - MongoDB (Logs & Analytics)
+   - Redis (Caching & Sessions)
+   - MinIO (Object Storage)
+
+
+2. MICROSERVICES COMPONENTS:
+
+   a) Identity & Access Management (IAM) Service
+   b) Compute Service (Virtual Machine Management)
+   c) Storage Service (S3-compatible Object Storage)
+   d) Database Service (Managed Database Provisioning)
+   e) Load Balancer Service
+   f) Monitoring & Metrics Service
+   g) Billing & Metering Service
+   h) API Gateway Service
+   i) Notification Service
+   j) Backup & Recovery Service
+
+
+COMPLETE TECHNOLOGY STACK:
+================================================================================
+
+FRONTEND TECHNOLOGIES:
+
+1. JavaFX (Desktop Application):
+   - JavaFX 17+ for Rich Desktop GUI
+   - FXML for UI Layouts
+   - CSS for Styling
+   - SceneBuilder for Visual Design
+   - ControlsFX for Advanced UI Components
+   - JFoenix for Material Design Components
+   - Charts API for Data Visualization
+   
+   Desktop Application Features:
+   - Admin Dashboard
+   - Resource Management Interface
+   - Real-time Monitoring Graphs
+   - User Management Panel
+   - System Configuration
+   - Log Viewer
+   - Billing Reports
+
+2. Vaadin (Web Application):
+   - Vaadin 24+ for Web UI
+   - Vaadin Flow for Server-Side Java
+   - Vaadin Charts for Data Visualization
+   - Vaadin Grid for Data Tables
+   - Progressive Web App (PWA) Support
+
+
+BACKEND TECHNOLOGIES:
+
+1. Core Framework:
+   - Java 17+ (LTS Version)
+   - Spring Boot 3.x
+   - Spring Framework 6.x
+   - Maven for Build Management
+
+2. Spring Ecosystem:
+   - Spring Cloud Gateway - API Gateway
+   - Spring Cloud Config - Configuration Management
+   - Spring Cloud Netflix Eureka - Service Discovery
+   - Spring Cloud LoadBalancer - Load Balancing
+   - Spring Security - Authentication & Authorization
+   - Spring Data JPA - Database Access
+   - Spring Data Redis - Caching
+   - Spring Data MongoDB - NoSQL Access
+   - Spring WebFlux - Reactive Programming
+   - Spring AMQP - Message Queue Integration
+   - Spring Boot Actuator - Health Monitoring
+   - Spring REST Docs - API Documentation
+
+3. Microservices Infrastructure:
+   - Netflix Eureka - Service Registry
+   - Apache Kafka - Event Streaming
+   - RabbitMQ - Message Broker
+   - Apache ZooKeeper - Distributed Coordination
+   - Consul - Service Mesh (Optional)
+
+4. Container & Orchestration:
+   - Docker Java API - Container Management
+   - Kubernetes Java Client (Fabric8) - Orchestration
+   - Apache CloudStack SDK - Infrastructure Layer
+
+
+DATABASE TECHNOLOGIES (SQL):
+
+1. Relational Databases:
+   
+   MySQL 8.0+:
+   - User Account Management
+   - Billing & Transactions
+   - Resource Quotas
+   - Audit Logs
+   - JDBC Driver: mysql-connector-java
+   
+   PostgreSQL 14+:
+   - Platform Metadata
+   - Service Configurations
+   - Instance Information
+   - Network Topology
+   - JDBC Driver: postgresql
+   
+   H2 Database:
+   - Development & Testing
+   - Embedded Mode
+   - In-Memory Operations
+
+2. SQL Technologies:
+   - JDBC (Java Database Connectivity)
+   - Hibernate ORM Framework
+   - JPA (Java Persistence API)
+   - Spring Data JPA
+   - Flyway - Database Migrations
+   - Liquibase - Schema Management
+   - HikariCP - Connection Pooling
+
+3. NoSQL (Supporting):
+   - MongoDB - Log Storage & Analytics
+   - Redis - Caching & Session Management
+   - Apache Cassandra - Time-Series Data
+
+
+STORAGE TECHNOLOGIES:
+
+1. Object Storage:
+   - MinIO Server (S3-Compatible)
+   - MinIO Java SDK
+   - Apache Commons IO
+   
+2. Distributed File System:
+   - Apache Hadoop HDFS
+   - GlusterFS (via JNI)
+
+
+MONITORING & OBSERVABILITY:
+
+1. Metrics & Monitoring:
+   - Micrometer - Metrics Collection
+   - Prometheus Java Client - Metrics Database
+   - Grafana - Visualization
+   - Spring Boot Actuator - Health Checks
+   
+2. Logging:
+   - SLF4J - Logging Facade
+   - Logback - Logging Implementation
+   - ELK Stack Integration:
+     * Elasticsearch - Log Storage
+     * Logstash - Log Processing
+     * Kibana - Log Visualization
+   
+3. Distributed Tracing:
+   - Zipkin - Request Tracing
+   - Spring Cloud Sleuth - Distributed Tracing
+
+
+SECURITY TECHNOLOGIES:
+
+1. Authentication & Authorization:
+   - Spring Security 6.x
+   - OAuth 2.0 / OpenID Connect
+   - JWT (JSON Web Tokens) - jjwt library
+   - Keycloak - Identity Management
+   - BCrypt - Password Hashing
+   
+2. Encryption:
+   - Bouncy Castle - Cryptography
+   - Java Cryptography Extension (JCE)
+   - SSL/TLS for Communications
+   
+3. Secrets Management:
+   - HashiCorp Vault Java Client
+   - Spring Cloud Vault
+
+
+API & COMMUNICATION:
+
+1. RESTful APIs:
+   - Spring REST
+   - Jackson - JSON Processing
+   - Gson - JSON Serialization
+   
+2. API Documentation:
+   - Swagger/OpenAPI 3 (Springdoc-OpenAPI)
+   - Spring REST Docs
+   
+3. GraphQL (Optional):
+   - GraphQL Java
+   - GraphQL Spring Boot Starter
+
+4. WebSocket:
+   - Spring WebSocket
+   - SockJS
+   - STOMP Protocol
+
+
+TESTING FRAMEWORKS:
+
+1. Unit Testing:
+   - JUnit 5
+   - Mockito
+   - AssertJ
+   
+2. Integration Testing:
+   - Spring Boot Test
+   - TestContainers
+   - REST Assured
+   
+3. Performance Testing:
+   - JMeter
+   - Gatling
+
+
+BUILD & DEPLOYMENT:
+
+1. Build Tools:
+   - Apache Maven 3.8+
+   - Maven Assembly Plugin
+   - Maven Shade Plugin
+   
+2. Containerization:
+   - Docker
+   - Docker Compose
+   - Jib (Java Container Plugin)
+   
+3. CI/CD:
+   - Jenkins
+   - GitLab CI
+   - GitHub Actions
+
+
+DETAILED FEATURE SPECIFICATIONS:
+================================================================================
+
+FEATURE 1: IDENTITY & ACCESS MANAGEMENT (IAM)
+--------------------------------------------------------------------------------
+Description: Comprehensive user and access management system
+
+Components:
+- User Registration & Authentication
+- Role-Based Access Control (RBAC)
+- Multi-tenancy Support
+- API Key Management
+- Security Policies
+
+Java Implementation:
+- Spring Security for authentication
+- JWT for token-based auth
+- Keycloak for identity provider
+- BCrypt for password encryption
+
+Database Schema (MySQL):
+- users (user_id, username, email, password_hash, created_at)
+- roles (role_id, role_name, permissions)
+- user_roles (user_id, role_id)
+- tenants (tenant_id, name, created_at, status)
+- api_keys (key_id, user_id, key_hash, created_at, expires_at)
+- permissions (permission_id, resource, action, description)
+
+JavaFX Interface:
+- User Management Panel
+- Role Assignment Interface
+- Permission Matrix View
+- API Key Generator
+- Audit Log Viewer
+
+REST API Endpoints:
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/logout
+GET    /api/v1/users
+POST   /api/v1/users
+PUT    /api/v1/users/{id}
+DELETE /api/v1/users/{id}
+GET    /api/v1/roles
+POST   /api/v1/apikeys
+DELETE /api/v1/apikeys/{id}
+
+Java Code Structure:
+com.cloudforge.iam
+├── controller
+│   ├── AuthController.java
+│   ├── UserController.java
+│   └── RoleController.java
+├── service
+│   ├── AuthService.java
+│   ├── UserService.java
+│   └── JwtService.java
+├── repository
+│   ├── UserRepository.java
+│   ├── RoleRepository.java
+│   └── ApiKeyRepository.java
+├── model
+│   ├── User.java
+│   ├── Role.java
+│   ├── Tenant.java
+│   └── ApiKey.java
+├── dto
+│   ├── LoginRequest.java
+│   ├── RegisterRequest.java
+│   └── UserResponse.java
+└── security
+    ├── JwtAuthFilter.java
+    ├── SecurityConfig.java
+    └── CustomUserDetailsService.java
+
+
+FEATURE 2: COMPUTE SERVICE (EC2-like Virtual Machines)
+--------------------------------------------------------------------------------
+Description: Virtual machine provisioning and management
+
+Components:
+- Instance Creation/Deletion
+- Instance Start/Stop/Reboot
+- Instance Sizing (CPU, RAM, Disk)
+- SSH Key Management
+- Security Groups (Firewall Rules)
+- Instance Metadata Service
+- Image Management (AMI-like)
+- Instance Snapshots
+
+Java Implementation:
+- Docker Java API for containerized instances
+- Kubernetes Client (Fabric8) for orchestration
+- libvirt bindings for VM hypervisor control
+
+Database Schema (PostgreSQL):
+- instances (instance_id, tenant_id, name, type, state, ip_address, created_at)
+- instance_types (type_id, name, vcpu, memory_gb, disk_gb, price_per_hour)
+- images (image_id, name, os_type, version, size_gb, public)
+- security_groups (group_id, tenant_id, name, description)
+- security_rules (rule_id, group_id, protocol, port, source_cidr)
+- ssh_keys (key_id, tenant_id, name, public_key, fingerprint)
+- instance_snapshots (snapshot_id, instance_id, name, created_at, size_gb)
+- instance_volumes (volume_id, instance_id, device, size_gb, type)
+
+JavaFX Interface:
+- Instance Dashboard (Grid View)
+- Instance Creation Wizard
+- Instance Details Panel
+- Performance Monitoring Graphs
+- SSH Key Manager
+- Security Group Editor
+- Snapshot Manager
+
+REST API Endpoints:
+GET    /api/v1/instances
+POST   /api/v1/instances
+GET    /api/v1/instances/{id}
+DELETE /api/v1/instances/{id}
+POST   /api/v1/instances/{id}/start
+POST   /api/v1/instances/{id}/stop
+POST   /api/v1/instances/{id}/reboot
+GET    /api/v1/instance-types
+GET    /api/v1/images
+POST   /api/v1/images
+POST   /api/v1/snapshots
+GET    /api/v1/security-groups
+POST   /api/v1/security-groups
+
+Java Code Structure:
+com.cloudforge.compute
+├── controller
+│   ├── InstanceController.java
+│   ├── ImageController.java
+│   └── SecurityGroupController.java
+├── service
+│   ├── InstanceService.java
+│   ├── DockerService.java
+│   ├── KubernetesService.java
+│   ├── ImageService.java
+│   └── NetworkService.java
+├── repository
+│   ├── InstanceRepository.java
+│   ├── ImageRepository.java
+│   ├── SecurityGroupRepository.java
+│   └── SSHKeyRepository.java
+├── model
+│   ├── Instance.java
+│   ├── InstanceType.java
+│   ├── Image.java
+│   ├── SecurityGroup.java
+│   └── SSHKey.java
+└── dto
+    ├── CreateInstanceRequest.java
+    ├── InstanceResponse.java
+    └── SecurityRuleDto.java
+
+
+FEATURE 3: STORAGE SERVICE (S3-compatible Object Storage)
+--------------------------------------------------------------------------------
+Description: Scalable object storage with S3-compatible API
+
+Components:
+- Bucket Creation/Deletion
+- Object Upload/Download
+- Multipart Upload
+- Object Versioning
+- Access Control Lists (ACLs)
+- Pre-signed URLs
+- Server-Side Encryption
+- Lifecycle Policies
+- Static Website Hosting
+
+Java Implementation:
+- MinIO Server (S3-compatible backend)
+- MinIO Java SDK
+- Spring WebFlux for async operations
+- Apache Commons FileUpload
+
+Database Schema (MySQL):
+- buckets (bucket_id, tenant_id, name, region, created_at, versioning)
+- objects (object_id, bucket_id, key, size_bytes, etag, version_id, created_at)
+- object_metadata (metadata_id, object_id, key, value)
+- bucket_policies (policy_id, bucket_id, policy_json)
+- access_logs (log_id, bucket_id, action, timestamp, ip_address, user_id)
+
+JavaFX Interface:
+- Bucket Browser (Tree View)
+- File Upload Interface (Drag & Drop)
+- Object Properties Panel
+- Access Control Editor
+- Storage Analytics Dashboard
+- Lifecycle Policy Manager
+
+REST API Endpoints:
+GET    /api/v1/storage/buckets
+POST   /api/v1/storage/buckets
+DELETE /api/v1/storage/buckets/{name}
+GET    /api/v1/storage/buckets/{bucket}/objects
+POST   /api/v1/storage/buckets/{bucket}/objects
+GET    /api/v1/storage/buckets/{bucket}/objects/{key}
+DELETE /api/v1/storage/buckets/{bucket}/objects/{key}
+POST   /api/v1/storage/buckets/{bucket}/presigned-url
+PUT    /api/v1/storage/buckets/{bucket}/versioning
+GET    /api/v1/storage/buckets/{bucket}/acl
+PUT    /api/v1/storage/buckets/{bucket}/acl
+
+Java Code Structure:
+com.cloudforge.storage
+├── controller
+│   ├── BucketController.java
+│   └── ObjectController.java
+├── service
+│   ├── StorageService.java
+│   ├── MinioService.java
+│   ├── EncryptionService.java
+│   └── PresignedUrlService.java
+├── repository
+│   ├── BucketRepository.java
+│   └── ObjectMetadataRepository.java
+├── model
+│   ├── Bucket.java
+│   ├── StorageObject.java
+│   └── BucketPolicy.java
+└── dto
+    ├── UploadRequest.java
+    ├── PresignedUrlResponse.java
+    └── BucketResponse.java
+
+
+FEATURE 4: DATABASE SERVICE (RDS-like Managed Databases)
+--------------------------------------------------------------------------------
+Description: Managed relational database provisioning and management
+
+Components:
+- Database Instance Provisioning (MySQL, PostgreSQL)
+- Automated Backups
+- Point-in-Time Recovery
+- Database Snapshots
+- Read Replicas
+- Vertical Scaling
+- Performance Monitoring
+- Parameter Groups
+- Subnet Groups
+
+Java Implementation:
+- Docker containers for database instances
+- Kubernetes StatefulSets for orchestration
+- JDBC for database management
+- pg_dump/mysqldump for backups
+
+Database Schema (PostgreSQL):
+- db_instances (db_id, tenant_id, engine, version, instance_class, storage_gb, status)
+- db_parameters (param_id, db_id, parameter_name, value)
+- db_backups (backup_id, db_id, backup_type, size_gb, created_at, s3_location)
+- db_snapshots (snapshot_id, db_id, name, created_at, size_gb)
+- db_replicas (replica_id, primary_db_id, replica_db_id, lag_seconds)
+- db_credentials (cred_id, db_id, username, password_encrypted, created_at)
+
+JavaFX Interface:
+- Database Instance List
+- Instance Creation Wizard
+- Connection Details Panel
+- Backup Scheduler
+- Performance Metrics Dashboard
+- Query Monitor
+- Parameter Configuration
+
+REST API Endpoints:
+GET    /api/v1/databases
+POST   /api/v1/databases
+GET    /api/v1/databases/{id}
+DELETE /api/v1/databases/{id}
+POST   /api/v1/databases/{id}/backup
+POST   /api/v1/databases/{id}/restore
+POST   /api/v1/databases/{id}/snapshot
+GET    /api/v1/databases/{id}/replicas
+POST   /api/v1/databases/{id}/replicas
+GET    /api/v1/databases/{id}/metrics
+
+Java Code Structure:
+com.cloudforge.database
+├── controller
+│   ├── DatabaseController.java
+│   ├── BackupController.java
+│   └── ReplicaController.java
+├── service
+│   ├── DatabaseService.java
+│   ├── BackupService.java
+│   ├── RestoreService.java
+│   └── MonitoringService.java
+├── repository
+│   ├── DbInstanceRepository.java
+│   ├── BackupRepository.java
+│   └── SnapshotRepository.java
+├── model
+│   ├── DbInstance.java
+│   ├── Backup.java
+│   ├── Snapshot.java
+│   └── Replica.java
+└── dto
+    ├── CreateDbRequest.java
+    ├── BackupRequest.java
+    └── DbInstanceResponse.java
+
+
+FEATURE 5: LOAD BALANCER SERVICE
+--------------------------------------------------------------------------------
+Description: Application and network load balancing
+
+Components:
+- Load Balancer Creation
+- Target Group Management
+- Health Checks
+- SSL/TLS Termination
+- Sticky Sessions
+- Connection Draining
+- Access Logs
+- Layer 4 & Layer 7 Load Balancing
+
+Java Implementation:
+- Nginx/HAProxy configuration via Java
+- Spring Cloud LoadBalancer
+- Custom load balancing algorithms
+
+Database Schema (MySQL):
+- load_balancers (lb_id, tenant_id, name, type, ip_address, dns_name, created_at)
+- target_groups (group_id, lb_id, name, protocol, port, health_check_path)
+- targets (target_id, group_id, instance_id, port, health_status)
+- lb_listeners (listener_id, lb_id, protocol, port, ssl_certificate_id)
+- lb_rules (rule_id, listener_id, condition_field, condition_value, target_group_id)
+- health_checks (check_id, target_id, timestamp, status, response_time_ms)
+
+JavaFX Interface:
+- Load Balancer Dashboard
+- Target Group Editor
+- Health Status Monitor
+- Listener Configuration
+- SSL Certificate Manager
+- Traffic Analytics
+
+REST API Endpoints:
+GET    /api/v1/loadbalancers
+POST   /api/v1/loadbalancers
+DELETE /api/v1/loadbalancers/{id}
+GET    /api/v1/loadbalancers/{id}/targets
+POST   /api/v1/loadbalancers/{id}/targets
+DELETE /api/v1/loadbalancers/{id}/targets/{targetId}
+GET    /api/v1/loadbalancers/{id}/health
+PUT    /api/v1/loadbalancers/{id}/listeners
+
+Java Code Structure:
+com.cloudforge.loadbalancer
+├── controller
+│   ├── LoadBalancerController.java
+│   └── TargetGroupController.java
+├── service
+│   ├── LoadBalancerService.java
+│   ├── HealthCheckService.java
+│   └── TrafficRoutingService.java
+├── repository
+│   ├── LoadBalancerRepository.java
+│   ├── TargetGroupRepository.java
+│   └── TargetRepository.java
+├── model
+│   ├── LoadBalancer.java
+│   ├── TargetGroup.java
+│   ├── Target.java
+│   └── Listener.java
+└── algorithm
+    ├── RoundRobinStrategy.java
+    ├── LeastConnectionsStrategy.java
+    └── WeightedStrategy.java
+
+
+FEATURE 6: MONITORING & METRICS SERVICE
+--------------------------------------------------------------------------------
+Description: Comprehensive monitoring and alerting system
+
+Components:
+- Resource Metrics Collection
+- Custom Metrics
+- Dashboards
+- Alarms & Notifications
+- Log Aggregation
+- Real-time Monitoring
+- Performance Analytics
+
+Java Implementation:
+- Micrometer for metrics
+- Prometheus for storage
+- Grafana for visualization
+- Spring Boot Actuator
+
+Database Schema (PostgreSQL):
+- metrics (metric_id, resource_id, metric_name, value, timestamp, unit)
+- alarms (alarm_id, tenant_id, name, metric_name, threshold, comparison, state)
+- alarm_history (history_id, alarm_id, state_change, timestamp, reason)
+- dashboards (dashboard_id, tenant_id, name, layout_json)
+- dashboard_widgets (widget_id, dashboard_id, type, config_json, position)
+
+JavaFX Interface:
+- Real-time Metrics Dashboard
+- Custom Dashboard Builder
+- Alarm Configuration Panel
+- Log Viewer with Filters
+- Resource Health Overview
+- Trend Analysis Charts
+
+REST API Endpoints:
+GET    /api/v1/metrics
+POST   /api/v1/metrics
+GET    /api/v1/metrics/{resource}
+GET    /api/v1/alarms
+POST   /api/v1/alarms
+PUT    /api/v1/alarms/{id}
+DELETE /api/v1/alarms/{id}
+GET    /api/v1/dashboards
+POST   /api/v1/dashboards
+
+Java Code Structure:
+com.cloudforge.monitoring
+├── controller
+│   ├── MetricsController.java
+│   ├── AlarmController.java
+│   └── DashboardController.java
+├── service
+│   ├── MetricsCollectionService.java
+│   ├── AlarmService.java
+│   ├── NotificationService.java
+│   └── DashboardService.java
+├── repository
+│   ├── MetricRepository.java
+│   ├── AlarmRepository.java
+│   └── DashboardRepository.java
+├── model
+│   ├── Metric.java
+│   ├── Alarm.java
+│   └── Dashboard.java
+└── collector
+    ├── CpuMetricCollector.java
+    ├── MemoryMetricCollector.java
+    └── DiskMetricCollector.java
+
+
+FEATURE 7: BILLING & METERING SERVICE
+--------------------------------------------------------------------------------
+Description: Resource usage tracking and billing
+
+Components:
+- Usage Metering
+- Cost Calculation
+- Billing Reports
+- Invoice Generation
+- Payment Processing
+- Cost Optimization Recommendations
+- Budget Alerts
+
+Java Implementation:
+- Scheduled jobs for metering
+- Stripe/PayPal integration
+- PDF generation for invoices
+
+Database Schema (MySQL):
+- usage_records (record_id, tenant_id, resource_type, resource_id, quantity, timestamp)
+- pricing_plans (plan_id, resource_type, unit_price, currency)
+- invoices (invoice_id, tenant_id, billing_period_start, billing_period_end, total_amount, status)
+- invoice_items (item_id, invoice_id, description, quantity, unit_price, amount)
+- payments (payment_id, invoice_id, amount, payment_method, status, timestamp)
+- budgets (budget_id, tenant_id, amount, period, alert_threshold)
+
+JavaFX Interface:
+- Billing Dashboard
+- Invoice Viewer/Generator
+- Usage Analytics
+- Cost Explorer
+- Budget Manager
+- Payment History
+
+REST API Endpoints:
+GET    /api/v1/billing/usage
+GET    /api/v1/billing/invoices
+GET    /api/v1/billing/invoices/{id}
+POST   /api/v1/billing/payments
+GET    /api/v1/billing/cost-analysis
+POST   /api/v1/billing/budgets
+GET    /api/v1/billing/budgets
+
+Java Code Structure:
+com.cloudforge.billing
+├── controller
+│   ├── BillingController.java
+│   ├── InvoiceController.java
+│   └── PaymentController.java
+├── service
+│   ├── MeteringService.java
+│   ├── BillingService.java
+│   ├── InvoiceService.java
+│   ├── PaymentService.java
+│   └── PdfGeneratorService.java
+├── repository
+│   ├── UsageRecordRepository.java
+│   ├── InvoiceRepository.java
+│   └── PaymentRepository.java
+├── model
+│   ├── UsageRecord.java
+│   ├── Invoice.java
+│   ├── Payment.java
+│   └── Budget.java
+└── scheduler
+    └── MeteringScheduler.java
+
+
+FEATURE 8: API GATEWAY SERVICE
+--------------------------------------------------------------------------------
+Description: Centralized API management and routing
+
+Components:
+- Request Routing
+- Rate Limiting
+- API Key Validation
+- Request/Response Transformation
+- CORS Handling
+- API Versioning
+- Request Logging
+- Circuit Breaker
+
+Java Implementation:
+- Spring Cloud Gateway
+- Resilience4j for circuit breaker
+- Redis for rate limiting
+
+Database Schema (PostgreSQL):
+- api_routes (route_id, path, service_name, method, active)
+- api_keys (key_id, tenant_id, key_hash, rate_limit, created_at, expires_at)
+- rate_limits (limit_id, api_key_id, requests, time_window_seconds)
+- api_logs (log_id, timestamp, method, path, status_code, response_time_ms, api_key_id)
+
+Java Code Structure:
+com.cloudforge.gateway
+├── filter
+│   ├── AuthenticationFilter.java
+│   ├── RateLimitFilter.java
+│   └── LoggingFilter.java
+├── config
+│   ├── GatewayConfig.java
+│   └── RouteConfig.java
+├── service
+│   ├── RateLimitService.java
+│   └── ApiKeyService.java
+└── repository
+    └── ApiKeyRepository.java
+
+
+FEATURE 9: NOTIFICATION SERVICE
+--------------------------------------------------------------------------------
+Description: Multi-channel notification system
+
+Components:
+- Email Notifications
+- SMS Notifications
+- In-App Notifications
+- Webhook Notifications
+- Notification Templates
+- Delivery Tracking
+
+Java Implementation:
+- JavaMail API for emails
+- Twilio Java SDK for SMS
+- WebSocket for real-time notifications
+
+Database Schema (MySQL):
+- notifications (notification_id, tenant_id, type, channel, subject, message, status, created_at)
+- notification_templates (template_id, name, subject, body, variables)
+- notification_preferences (pref_id, user_id, channel, enabled)
+- webhooks (webhook_id, tenant_id, url, events, secret, active)
+
+Java Code Structure:
+com.cloudforge.notification
+├── controller
+│   └── NotificationController.java
+├── service
+│   ├── EmailService.java
+│   ├── SmsService.java
+│   ├── WebhookService.java
+│   └── TemplateService.java
+├── repository
+│   ├── NotificationRepository.java
+│   └── WebhookRepository.java
+└── model
+    ├── Notification.java
+    ├── Template.java
+    └── Webhook.java
+
+
+COMPLETE DATABASE SCHEMA DESIGN:
+================================================================================
+
+MYSQL DATABASES:
+
+Database: cloudforge_iam
+Tables:
+- users
+- roles
+- permissions
+- user_roles
+- role_permissions
+- tenants
+- api_keys
+- audit_logs
+- sessions
+
+Database: cloudforge_billing
+Tables:
+- usage_records
+- pricing_plans
+- invoices
+- invoice_items
+- payments
+- payment_methods
+- budgets
+- budget_alerts
+- discount_codes
+
+Database: cloudforge_storage
+Tables:
+- buckets
+- objects
+- object_metadata
+- bucket_policies
+- access_logs
+- lifecycle_policies
+
+
+POSTGRESQL DATABASES:
+
+Database: cloudforge_compute
+Tables:
+- instances
+- instance_types
+- images
+- security_groups
+- security_rules
+- ssh_keys
+- instance_snapshots
+- instance_volumes
+- elastic_ips
+- placement_groups
+
+Database: cloudforge_database
+Tables:
+- db_instances
+- db_parameters
+- db_backups
+- db_snapshots
+- db_replicas
+- db_credentials
+- db_subnet_groups
+- db_parameter_groups
+
+Database: cloudforge_network
+Tables:
+- load_balancers
+- target_groups
+- targets
+- lb_listeners
+- lb_rules
+- health_checks
+- vpcs
+- subnets
+- route_tables
+- network_interfaces
+
+Database: cloudforge_monitoring
+Tables:
+- metrics
+- alarms
+- alarm_history
+- dashboards
+- dashboard_widgets
+- log_streams
+- log_events
+
+Database: cloudforge_gateway
+Tables:
+- api_routes
+- api_keys
+- rate_limits
+- api_logs
+- api_versions
+- cors_configurations
+
+
+SQL SAMPLE SCHEMAS:
+================================================================================
+
+-- Users Table (MySQL)
+CREATE TABLE users (
+    user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_tenant (tenant_id),
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Instances Table (PostgreSQL)
+CREATE TABLE instances (
+    instance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    instance_type VARCHAR(50) NOT NULL,
+    image_id UUID NOT NULL,
+    state VARCHAR(20) NOT NULL DEFAULT 'pending',
+    private_ip INET,
+    public_ip INET,
+    security_group_id UUID,
+    ssh_key_id UUID,
+    vcpu INTEGER NOT NULL,
+    memory_gb INTEGER NOT NULL,
+    disk_gb INTEGER NOT NULL,
+    region VARCHAR(50) NOT NULL,
+    availability_zone VARCHAR(50),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    terminated_at TIMESTAMP WITH TIME ZONE,
+    FOREIGN KEY (image_id) REFERENCES images(image_id),
+    FOREIGN KEY (security_group_id) REFERENCES security_groups(group_id),
+    FOREIGN KEY (ssh_key_id) REFERENCES ssh_keys(key_id)
+);
+
+CREATE INDEX idx_instances_tenant ON instances(tenant_id);
+CREATE INDEX idx_instances_state ON instances(state);
+CREATE INDEX idx_instances_created ON instances(created_at);
+
+-- Buckets Table (MySQL)
+CREATE TABLE buckets (
+    bucket_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    region VARCHAR(50) NOT NULL,
+    versioning_enabled BOOLEAN DEFAULT FALSE,
+    encryption_enabled BOOLEAN DEFAULT FALSE,
+    public_access_blocked BOOLEAN DEFAULT TRUE,
+    storage_class VARCHAR(50) DEFAULT 'STANDARD',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_bucket_tenant (tenant_id),
+    INDEX idx_bucket_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Invoices Table (MySQL)
+CREATE TABLE invoices (
+    invoice_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    billing_period_start DATE NOT NULL,
+    billing_period_end DATE NOT NULL,
+    subtotal DECIMAL(12,2) NOT NULL,
+    tax_amount DECIMAL(12,2) DEFAULT 0.00,
+    total_amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'USD',
+    status ENUM('draft', 'sent', 'paid', 'overdue', 'cancelled') DEFAULT 'draft',
+    due_date DATE NOT NULL,
+    paid_date TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_invoice_tenant (tenant_id),
+    INDEX idx_invoice_status (status),
+    INDEX idx_invoice_due_date (due_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Metrics Table (PostgreSQL with TimescaleDB)
+CREATE TABLE metrics (
+    metric_id BIGSERIAL PRIMARY KEY,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+    resource_type VARCHAR(50) NOT NULL,
+    resource_id VARCHAR(255) NOT NULL,
+    metric_name VARCHAR(100) NOT NULL,
+    value DOUBLE PRECISION NOT NULL,
+    unit VARCHAR(20),
+    dimensions JSONB,
+    tenant_id BIGINT NOT NULL
+);
+
+CREATE INDEX idx_metrics_resource ON metrics(resource_type, resource_id);
+CREATE INDEX idx_metrics_timestamp ON metrics(timestamp DESC);
+CREATE INDEX idx_metrics_tenant ON metrics(tenant_id);
+
+-- Convert to TimescaleDB hypertable for time-series optimization
+SELECT create_hypertable('metrics', 'timestamp');
+
+
+JAVAFX APPLICATION DESIGN:
+================================================================================
+
+APPLICATION STRUCTURE:
+
+1. Main Application Class:
+   - CloudForgeApp.java (extends Application)
+   - Primary Stage Configuration
+   - Scene Management
+   - Application Lifecycle
+
+2. FXML Layouts:
+   - DashboardView.fxml
+   - InstanceManagementView.fxml
+   - StorageBrowserView.fxml
+   - DatabaseManagementView.fxml
+   - BillingView.fxml
+   - UserManagementView.fxml
+   - SettingsView.fxml
+   - MonitoringView.fxml
+
+3. Controller Classes:
+   - DashboardController.java
+   - InstanceManagementController.java
+   - StorageBrowserController.java
+   - DatabaseManagementController.java
+   - BillingController.java
+   - UserManagementController.java
+   - SettingsController.java
+   - MonitoringController.java
+
+4. JavaFX Components Used:
+   - TableView for data grids
+   - TreeView for hierarchical data
+   - ListView for lists
+   - BarChart, LineChart, PieChart for metrics
+   - TabPane for multi-view interfaces
+   - MenuBar and Menu for navigation
+   - ToolBar for quick actions
+   - SplitPane for resizable panels
+   - ProgressBar and ProgressIndicator
+   - TextField, PasswordField, ComboBox for inputs
+   - Alert and Dialog for user interactions
+   - WebView for embedded documentation
+
+
+JAVAFX FEATURES IMPLEMENTATION:
+
+1. Dashboard View:
+   - Real-time resource usage cards
+   - Recent activity timeline
+   - Quick action buttons
+   - System health indicators
+   - Cost overview chart
+
+2. Instance Management:
+   - Instance grid with status indicators
+   - Filter and search functionality
+   - Instance creation wizard
+   - Context menu for operations
+   - Performance graphs per instance
+
+3. Storage Browser:
+   - Tree view of buckets and folders
+   - Drag-and-drop file upload
+   - File preview pane
+   - Properties editor
+   - Progress tracking for uploads
+
+4. Monitoring Dashboard:
+   - Multiple metric charts (CPU, Memory, Network)
+   - Auto-refresh capability
+   - Time range selector
+   - Export to PDF/CSV
+   - Alarm status panel
+
+5. User Management:
+   - User table with inline editing
+   - Role assignment matrix
+   - Permission tree view
+   - Activity log viewer
+   - Bulk operations
+
+
+JAVAFX CODE SAMPLE STRUCTURE:
+
+Main Application:
+package com.cloudforge.desktop;
+
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+public class CloudForgeApp extends Application {
+    
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(
+            getClass().getResource("/fxml/MainWindow.fxml")
+        );
+        Scene scene = new Scene(loader.load(), 1280, 800);
+        scene.getStylesheets().add("/css/application.css");
+        
+        primaryStage.setTitle("CloudForge - Cloud Management Console");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+    
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
+
+Desktop Package Structure:
+com.cloudforge.desktop
+├── CloudForgeApp.java
+├── controller
+│   ├── MainController.java
+│   ├── DashboardController.java
+│   ├── InstanceController.java
+│   ├── StorageController.java
+│   ├── DatabaseController.java
+│   ├── MonitoringController.java
+│   ├── BillingController.java
+│   └── SettingsController.java
+├── model
+│   ├── InstanceModel.java
+│   ├── BucketModel.java
+│   ├── DatabaseModel.java
+│   └── MetricModel.java
+├── service
+│   ├── ApiClient.java
+│   ├── AuthService.java
+│   └── WebSocketService.java
+├── util
+│   ├── AlertUtil.java
+│   ├── ValidationUtil.java
+│   └── FormatterUtil.java
+└── component
+    ├── MetricChart.java
+    ├── ResourceCard.java
+    └── StatusIndicator.java
+
+
+IMPLEMENTATION GUIDELINES:
+================================================================================
+
+1. AUTHENTICATION FLOW:
+   - Desktop app authenticates via REST API
+   - JWT token stored securely
+   - Token refresh mechanism
+   - Session timeout handling
+   - Multi-factor authentication support
+
+2. API COMMUNICATION:
+   - RESTful API using Spring RestTemplate or WebClient
+   - Asynchronous requests for UI responsiveness
+   - Error handling and retry logic
+   - Connection pooling
+   - Request/Response logging
+
+3. REAL-TIME UPDATES:
+   - WebSocket connection for live updates
+   - STOMP protocol for messaging
+   - Subscribe to resource state changes
+   - Automatic UI refresh on events
+
+4. DATA PERSISTENCE (Desktop):
+   - Local SQLite database for caching
+   - User preferences storage
+   - Offline mode support
+   - Sync mechanism
+
+5. SECURITY BEST PRACTICES:
+   - HTTPS for all API calls
+   - Encrypted storage for credentials
+   - Input validation
+   - SQL injection prevention
+   - XSS protection
+   - CORS configuration
+   - Rate limiting
+
+6. ERROR HANDLING:
+   - Global exception handler
+   - User-friendly error messages
+   - Logging to file and console
+   - Error recovery mechanisms
+
+7. PERFORMANCE OPTIMIZATION:
+   - Connection pooling (HikariCP)
+   - Query optimization with indexes
+   - Caching with Redis
+   - Lazy loading
+   - Pagination for large datasets
+   - Batch processing
+   - Asynchronous operations
+
+8. TESTING STRATEGY:
+   - Unit tests for services
+   - Integration tests for APIs
+   - End-to-end tests for workflows
+   - Performance testing
+   - Security testing
+   - Test data management
+
+
+DEPLOYMENT ARCHITECTURE:
+================================================================================
+
+PRODUCTION DEPLOYMENT:
+
+1. Infrastructure:
+   - Kubernetes cluster (3+ nodes)
+   - Load balancer (Nginx/HAProxy)
+   - MySQL cluster (Master-Replica)
+   - PostgreSQL cluster (Primary-Standby)
+   - Redis cluster (Sentinel mode)
+   - Kafka cluster (3 brokers)
+   - MinIO distributed (4+ nodes)
+   - Prometheus + Grafana stack
+
+2. Microservices Deployment:
+   - Each service in separate Docker container
+   - Kubernetes Deployment for each service
+   - Service discovery via Eureka
+   - Config Server for centralized configuration
+   - API Gateway as entry point
+
+3. High Availability:
+   - Multiple replicas per service
+   - Auto-scaling based on load
+   - Health checks and self-healing
+   - Database replication
+   - Backup and disaster recovery
+
+4. Monitoring:
+   - Application metrics (Micrometer)
+   - Infrastructure metrics (node-exporter)
+   - Log aggregation (ELK Stack)
+   - Distributed tracing (Zipkin)
+   - Alerting (Prometheus AlertManager)
+
+
+DEVELOPMENT WORKFLOW:
+================================================================================
+
+1. Version Control: Git with GitFlow
+2. Code Review: Pull request workflow
+3. Continuous Integration: Jenkins/GitLab CI
+4. Code Quality: SonarQube
+5. Dependency Management: Maven Central
+6. Documentation: JavaDoc + Swagger
+7. API Testing: Postman collections
+8. Performance Testing: JMeter scripts
+
+
+PROJECT DELIVERABLES:
+================================================================================
+
+1. Source Code:
+   - Complete microservices codebase
+   - JavaFX desktop application
+   - Vaadin web application
+   - Database migration scripts
+   - Docker compose files
+   - Kubernetes manifests
+
+2. Documentation:
+   - API documentation (Swagger)
+   - User manual
+   - Administrator guide
+   - Developer documentation
+   - Database schema documentation
+   - Deployment guide
+
+3. Testing Artifacts:
+   - Unit test suite
+   - Integration test suite
+   - Test reports
+   - Performance test results
+
+4. Configuration:
+   - Application properties
+   - Database configurations
+   - Security configurations
+   - Monitoring configurations
+
+
+EXPECTED LEARNING OUTCOMES:
+================================================================================
+
+1. Java Enterprise Development
+2. Microservices Architecture
+3. RESTful API Design
+4. Database Design & SQL
+5. Spring Framework Ecosystem
+6. JavaFX Desktop Development
+7. Web Development with Vaadin
+8. Cloud Infrastructure Concepts
+9. DevOps Practices
+10. Security Best Practices
+11. Distributed Systems
+12. Event-Driven Architecture
+13. Monitoring & Observability
+14. Performance Optimization
+15. Container Orchestration
+
+
+RECOMMENDED DEVELOPMENT TOOLS:
+================================================================================
+
+1. IDE: IntelliJ IDEA Ultimate or Eclipse
+2. Database: MySQL Workbench, pgAdmin
+3. API Testing: Postman, Insomnia
+4. Version Control: Git, GitHub/GitLab
+5. Container: Docker Desktop
+6. Orchestration: Minikube/Kind for local Kubernetes
+7. UI Design: Scene Builder for JavaFX
+8. Monitoring: Prometheus, Grafana
+9. Message Queue: Kafka, RabbitMQ
+10. Build Tool: Maven or Gradle
+
+
+SCALABILITY CONSIDERATIONS:
+================================================================================
+
+1. Horizontal Scaling:
+   - Stateless microservices
+   - Load balancer distribution
+   - Session management in Redis
+   - Database connection pooling
+
+2. Vertical Scaling:
+   - Resource allocation (CPU, Memory)
+   - JVM tuning
+   - Database optimization
+
+3. Data Partitioning:
+   - Sharding by tenant ID
+   - Read replicas for queries
+   - Write/Read separation
+
+4. Caching Strategy:
+   - Application-level cache (Caffeine)
+   - Distributed cache (Redis)
+   - CDN for static assets
+   - Database query cache
+
+
+SECURITY IMPLEMENTATION:
+================================================================================
+
+1. Authentication:
+   - JWT-based authentication
+   - OAuth 2.0 / OpenID Connect
+   - Multi-factor authentication
+   - Session management
+
+2. Authorization:
+   - Role-based access control (RBAC)
+   - Resource-level permissions
+   - Tenant isolation
+   - API key validation
+
+3. Data Security:
+   - Encryption at rest
+   - Encryption in transit (TLS/SSL)
+   - Database encryption
+   - Secrets management (Vault)
+
+4. Network Security:
+   - Security groups/Firewall rules
+   - VPC isolation
+   - DDoS protection
+   - Rate limiting
+
+5. Compliance:
+   - Audit logging
+   - Data retention policies
+   - GDPR compliance
+   - SOC 2 considerations
+
+
+MONITORING & ALERTING:
+================================================================================
+
+1. Metrics to Monitor:
+   - CPU, Memory, Disk usage
+   - Network I/O
+   - Request latency
+   - Error rates
+   - Database connections
+   - Queue depth
+   - Cache hit ratio
+
+2. Alerts:
+   - Resource threshold breaches
+   - Service downtime
+   - Failed deployments
+   - Database replication lag
+   - Disk space warnings
+   - Unusual traffic patterns
+
+3. Logging:
+   - Application logs
+   - Access logs
+   - Error logs
+   - Audit logs
+   - Security events
+
+
+COST OPTIMIZATION:
+================================================================================
+
+1. Resource Management:
+   - Auto-scaling policies
+   - Spot/Preemptible instances
+   - Resource tagging
+   - Idle resource detection
+
+2. Storage Optimization:
+   - Lifecycle policies
+   - Compression
+   - Deduplication
+   - Tiered storage
+
+3. Database Optimization:
+   - Query optimization
+   - Index tuning
+   - Connection pooling
+   - Read replicas for analytics
+
+
+END OF SPECIFICATION
+================================================================================
+
+This comprehensive specification provides a complete blueprint for building
+an enterprise-grade cloud platform using Java technologies. The project
+incorporates JavaFX for desktop GUI, SQL databases for data persistence,
+and follows industry best practices for scalability, security, and
+maintainability.
+
+Students should start by implementing core features (IAM, Compute, Storage)
+before moving to advanced features (Monitoring, Billing, Load Balancing).
+Each component can be developed and tested independently following the
+microservices architecture.
+
+For questions or clarifications, refer to official documentation:
+- Spring Framework: https://spring.io/projects
+- JavaFX: https://openjfx.io/
+- Docker: https://docs.docker.com/
+- Kubernetes: https://kubernetes.io/docs/

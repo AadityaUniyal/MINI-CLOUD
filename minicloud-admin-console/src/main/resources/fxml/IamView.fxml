@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.admin.controller.IamController" spacing="10" style="-fx-padding: 20;">
+    <TableView fx:id="tableView">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
+            <TableColumn fx:id="usernameColumn" text="Username" prefWidth="200"/>
+            <TableColumn fx:id="roleColumn" text="Role" prefWidth="120"/>
+        </columns>
+    </TableView>
+</VBox>

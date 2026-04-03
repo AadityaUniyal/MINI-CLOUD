@@ -1,0 +1,107 @@
+.root {
+    -fx-font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+    -fx-background-color: #f4f7f9;
+}
+
+.sidebar {
+    -fx-background-color: #2c3e50;
+    -fx-min-width: 220px;
+}
+
+.logo {
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 10 0;
+}
+
+.nav-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #bdc3c7;
+    -fx-alignment: center-left;
+    -fx-padding: 10 15;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.nav-btn:hover {
+    -fx-background-color: #34495e;
+    -fx-text-fill: white;
+}
+
+.logout-btn {
+    -fx-text-fill: #e74c3c;
+}
+
+.header-text {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-fill: #2c3e50;
+}
+
+.stat-card {
+    -fx-background-color: white;
+    -fx-padding: 20;
+    -fx-min-width: 200px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);
+    -fx-background-radius: 5px;
+}
+
+.stat-value {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2980b9;
+    -fx-padding: 5 0;
+}
+
+.stat-trend {
+    -fx-font-size: 12px;
+    -fx-text-fill: #27ae60;
+}
+
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: #dcdde1;
+    -fx-border-radius: 5px;
+}
+
+.table-view .column-header {
+    -fx-background-color: #f5f6fa;
+}
+
+/* MiniCloud Branding Styles */
+.MiniCloud-header {
+    -fx-background-color: #232f3e;
+    -fx-border-color: #1a222e;
+}
+
+.MiniCloud-search-bar {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-border-color: #37475a;
+}
+
+.MiniCloud-tree {
+    -fx-background-color: transparent;
+}
+
+.MiniCloud-details-pane {
+    -fx-background-color: #ffffff;
+    -fx-padding: 20;
+    -fx-border-color: #d5dbdb;
+    -fx-border-width: 1 0 0 0;
+}
+
+.MiniCloud-card {
+    -fx-background-color: #ffffff;
+    -fx-padding: 20;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 5, 0, 0, 2);
+}
+
+.MiniCloud-card-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a222e;
+}

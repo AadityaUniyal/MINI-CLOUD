@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.minicloud.admin.controller.MainController">
+    <left>
+        <VBox spacing="10" styleClass="sidebar">
+            <padding>
+                <Insets top="20" right="10" bottom="20" left="10"/>
+            </padding>
+            <Label text="MINICLOUD" styleClass="logo"/>
+            <Separator/>
+            <Button text="Dashboard" onAction="#onDashboardClick" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Instances" onAction="#onInstancesClick" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Storage" onAction="#onStorageClick" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Databases" onAction="#onDatabasesClick" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Monitoring" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Billing" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Region VBox.vgrow="ALWAYS" />
+            <Button text="Settings" maxWidth="Infinity" styleClass="nav-btn"/>
+            <Button text="Logout" onAction="#onLogoutClick" maxWidth="Infinity" styleClass="nav-btn, logout-btn"/>
+        </VBox>
+    </left>
+    
+    <center>
+        <VBox spacing="20" styleClass="content-area">
+            <padding>
+                <Insets top="30" right="30" bottom="30" left="30"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Text text="Dashboard Overview" styleClass="header-text"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="Refresh data" />
+            </HBox>
+            
+            <FlowPane hgap="20" vgap="20">
+                <VBox styleClass="stat-card">
+                    <Label text="Total Instances" />
+                    <Label text="42" styleClass="stat-value" />
+                    <Label text="+5% from last month" styleClass="stat-trend" />
+                </VBox>
+                <VBox styleClass="stat-card">
+                    <Label text="Active Buckets" />
+                    <Label text="12" styleClass="stat-value" />
+                </VBox>
+                <VBox styleClass="stat-card">
+                    <Label text="Today's Cost" />
+                    <Label text="$156.24" styleClass="stat-value" />
+                    <Label text="Normal usage" styleClass="stat-trend" />
+                </VBox>
+            </FlowPane>
+            
+            <TableView fx:id="instanceTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" text="ID" prefWidth="100"/>
+                    <TableColumn fx:id="colName" text="Name" prefWidth="200"/>
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+                    <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
+                    <TableColumn fx:id="colIp" text="IP Address" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

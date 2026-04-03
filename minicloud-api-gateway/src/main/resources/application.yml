@@ -1,0 +1,72 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: minicloud-api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: public-auth
+          uri: lb://MINICLOUD-IAM
+          predicates:
+            - Path=/api/auth/**
+          # Auth endpoints are public
+
+        - id: iam-service
+          uri: lb://MINICLOUD-IAM
+          predicates:
+            - Path=/api/iam/**
+          filters:
+            - AuthenticationFilter
+
+        - id: compute-service
+          uri: lb://MINICLOUD-COMPUTE
+          predicates:
+            - Path=/api/v1/compute/**
+          filters:
+            - AuthenticationFilter
+
+        - id: storage-service
+          uri: lb://MINICLOUD-STORAGE
+          predicates:
+            - Path=/api/v1/storage/**
+          filters:
+            - AuthenticationFilter
+
+        - id: database-service
+          uri: lb://MINICLOUD-DATABASE-SERVICE
+          predicates:
+            - Path=/api/v1/database/**
+          filters:
+            - AuthenticationFilter
+
+        - id: billing-service
+          uri: lb://MINICLOUD-BILLING
+          predicates:
+            - Path=/api/v1/billing/**
+          filters:
+            - AuthenticationFilter
+
+        - id: monitoring-service
+          uri: lb://MINICLOUD-MONITORING
+          predicates:
+            - Path=/api/v1/monitoring/**
+          filters:
+            - AuthenticationFilter
+
+        - id: notification-service
+          uri: lb://MINICLOUD-NOTIFICATION
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - AuthenticationFilter
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
