@@ -8,6 +8,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.CategoryAxis?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.admin.controller.MonitoringController" spacing="20" styleClass="view-container">
     <padding>
@@ -41,12 +44,12 @@
             </VBox>
         </VBox>
 
-        <VBox GridPane.columnIndex="1" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
-            <Label text="Active Alarms" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label text="●" style="-fx-text-fill: #10b981; -fx-font-size: 18px;"/>
-                <Label text="All systems functional. No active alarms." style="-fx-text-fill: #cbd5e1;"/>
-            </HBox>
+        <VBox GridPane.columnIndex="1" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" HBox.hgrow="ALWAYS" prefHeight="250">
+            <Label text="CPU Utilization History" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+            <LineChart fx:id="cpuChart" legendVisible="false" animated="false" createSymbols="false">
+                <xAxis><CategoryAxis side="BOTTOM"/></xAxis>
+                <yAxis><NumberAxis side="LEFT" upperBound="100" autoRanging="false"/></yAxis>
+            </LineChart>
         </VBox>
     </GridPane>
 

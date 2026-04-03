@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import atlantafx.base.theme.PrimerDark;
 import com.minicloud.admin.MiniCloudApplication;
 
 public class App extends Application {
@@ -14,6 +15,7 @@ public class App extends Application {
 
     @Override
     public void init() throws Exception {
+        Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
         springContext = new SpringApplicationBuilder(MiniCloudApplication.class).run();
     }
 

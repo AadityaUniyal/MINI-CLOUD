@@ -4,28 +4,41 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.geometry.Insets?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.admin.controller.DashboardController" spacing="30" styleClass="view-container">
     <Label text="Cloud Dashboard" styleClass="header-label"/>
     
     <FlowPane hgap="20" vgap="20">
         <VBox styleClass="metric-card">
-            <Label text="Instances" styleClass="metric-label"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="mdz-server" iconSize="24" iconColor="#3b82f6"/>
+                <Label text="Instances" styleClass="metric-label"/>
+            </HBox>
             <Label fx:id="instanceCountLabel" text="0" styleClass="metric-value"/>
         </VBox>
         
         <VBox styleClass="metric-card">
-            <Label text="S3 Buckets" styleClass="metric-label"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="mdz-database" iconSize="24" iconColor="#10b981"/>
+                <Label text="S3 Buckets" styleClass="metric-label"/>
+            </HBox>
             <Label fx:id="bucketCountLabel" text="0" styleClass="metric-value" style="-fx-text-fill: #10b981;"/>
         </VBox>
         
         <VBox styleClass="metric-card">
-            <Label text="IAM Users" styleClass="metric-label"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="mdz-account-group" iconSize="24" iconColor="#f59e0b"/>
+                <Label text="IAM Users" styleClass="metric-label"/>
+            </HBox>
             <Label fx:id="userCountLabel" text="0" styleClass="metric-value" style="-fx-text-fill: #f59e0b;"/>
         </VBox>
         
         <VBox styleClass="metric-card">
-            <Label text="Functions" styleClass="metric-label"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <FontIcon iconLiteral="mdz-lambda" iconSize="24" iconColor="#8b5cf6"/>
+                <Label text="Functions" styleClass="metric-label"/>
+            </HBox>
             <Label fx:id="lambdaCountLabel" text="0" styleClass="metric-value" style="-fx-text-fill: #8b5cf6;"/>
         </VBox>
     </FlowPane>

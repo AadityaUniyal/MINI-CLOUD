@@ -100,7 +100,7 @@ public class BackupService {
         return backupRecordRepository.findAll();
     }
 
-    @Scheduled(daysOfWeek = "SUN") // Weekly cleanup
+    @Scheduled(cron = "0 0 2 * * SUN") // Weekly cleanup
     public void purgeOldBackups() {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(retentionDays);
         List<BackupRecord> all = backupRecordRepository.findAll();

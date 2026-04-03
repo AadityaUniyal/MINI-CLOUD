@@ -1,5 +1,5 @@
 # Stage 1: Build (Maven compilation)
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies (layer caching)
@@ -15,7 +15,6 @@ COPY minicloud-database-service/pom.xml minicloud-database-service/
 COPY minicloud-loadbalancer/pom.xml minicloud-loadbalancer/
 COPY minicloud-monitoring/pom.xml minicloud-monitoring/
 COPY minicloud-billing/pom.xml minicloud-billing/
-COPY minicloud-portal/pom.xml minicloud-portal/
 COPY minicloud-notification/pom.xml minicloud-notification/
 COPY minicloud-admin-console/pom.xml minicloud-admin-console/
 
@@ -27,7 +26,7 @@ ARG APP_MODULE
 RUN mvn clean install -DskipTests -pl ${APP_MODULE} -am -B
 
 # Stage 2: Runtime (Slim JRE)
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 ARG APP_MODULE
 COPY --from=build /app/${APP_MODULE}/target/*.jar app.jar

@@ -173,6 +173,14 @@ public class MiniCloudClient {
     }
 
     // --- Billing ---
+    public List<BillingRecordDto> getBillingRecords() {
+        return List.of(
+            BillingRecordDto.builder().resourceType("EC2").cost(45.0).build(),
+            BillingRecordDto.builder().resourceType("S3").cost(12.0).build(),
+            BillingRecordDto.builder().resourceType("RDS").cost(68.5).build()
+        );
+    }
+
     public Map<String, Object> getBillingSummary() {
         Map<String, Object> mock = new HashMap<>();
         mock.put("totalCost", 125.50);

@@ -48,5 +48,9 @@
             <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>3.3.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -1,6 +1,5 @@
 package com.minicloud.admin;
 
-import com.minicloud.admin.MiniCloudApplication;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -677,14 +676,25 @@ public class MiniCloudFxApp extends Application {
                 double ramLoad = 0;
                 try {
                     java.lang.management.OperatingSystemMXBean osBean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
-                    if (osBean instanceof com.sun.management.OperatingSystemMXBean) {
-                        com.sun.management.OperatingSystemMXBean sunOsBean = (com.sun.management.OperatingSystemMXBean) osBean;
-                        double processCpu = sunOsBean.getCpuLoad();
-                        cpuLoad = processCpu < 0 ? 0 : processCpu * 100;
-                        long totalMem = sunOsBean.getTotalMemorySize();
-                        long freeMem = sunOsBean.getFreeMemorySize();
-                        ramLoad = ((double) (totalMem - freeMem) / totalMem) * 100;
-                    } else {
+                    // Use reflection to avoid hard dependency on com.sun.management which can be block by JPMS
+                    try {
+                        java.lang.reflect.Method getCpuLoad = osBean.getClass().getMethod("getProcessCpuLoad");
+                        if (getCpuLoad == null) getCpuLoad = osBean.getClass().getMethod("getCpuLoad"); // Support different JDK variants
+                        
+                        Object cpuVal = getCpuLoad.invoke(osBean);
+                        if (cpuVal instanceof Double) {
+                            double processCpu = (Double) cpuVal;
+                            cpuLoad = processCpu < 0 ? 0 : processCpu * 100;
+                        }
+
+                        java.lang.reflect.Method getTotalMem = osBean.getClass().getMethod("getTotalMemorySize");
+                        java.lang.reflect.Method getFreeMem = osBean.getClass().getMethod("getFreeMemorySize");
+                        if (getTotalMem != null && getFreeMem != null) {
+                            long totalMem = (Long) getTotalMem.invoke(osBean);
+                            long freeMem = (Long) getFreeMem.invoke(osBean);
+                            ramLoad = ((double) (totalMem - freeMem) / totalMem) * 100;
+                        }
+                    } catch (Exception e) {
                         double sysLoad = osBean.getSystemLoadAverage();
                         cpuLoad = sysLoad < 0 ? new java.util.Random().nextDouble() * 10 + 5 : sysLoad * 100;
                         Runtime rt = Runtime.getRuntime();

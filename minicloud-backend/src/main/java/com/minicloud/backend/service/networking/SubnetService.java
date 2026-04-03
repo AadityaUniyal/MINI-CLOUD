@@ -4,7 +4,7 @@ import com.minicloud.backend.model.Subnet;
 import com.minicloud.backend.model.VPC;
 import com.minicloud.backend.repository.SubnetRepository;
 import com.minicloud.backend.repository.VPCRepository;
-import com.minicloud.util.CIDRCalculator;
+import com.minicloud.common.util.CIDRCalculator;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;

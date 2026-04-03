@@ -6,6 +6,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.minicloud.admin.controller.BillingController" spacing="20" styleClass="view-container">
     <padding>
@@ -25,14 +28,12 @@
             <Label text="Next bill: May 1st, 2024" style="-fx-text-fill: #94a3b8; -fx-font-size: 11px;"/>
         </VBox>
         
-        <VBox prefWidth="400" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" HBox.hgrow="ALWAYS">
-            <Label text="Service Breakdown" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
-            <TableView fx:id="serviceTable" prefHeight="150" style="-fx-background-color: transparent;">
-                <columns>
-                    <TableColumn fx:id="serviceColumn" text="Service" prefWidth="200"/>
-                    <TableColumn fx:id="costColumn" text="Cost (USD)" prefWidth="150"/>
-                </columns>
-            </TableView>
+        <VBox prefWidth="400" spacing="10" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;" HBox.hgrow="ALWAYS" prefHeight="250">
+            <Label text="Monthly Spending Trend" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+            <BarChart fx:id="costChart" legendVisible="false" animated="false">
+                <xAxis><CategoryAxis side="BOTTOM"/></xAxis>
+                <yAxis><NumberAxis side="LEFT" label="USD"/></yAxis>
+            </BarChart>
         </VBox>
     </HBox>
 

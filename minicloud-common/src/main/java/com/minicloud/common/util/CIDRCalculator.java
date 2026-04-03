@@ -1,4 +1,4 @@
-package com.minicloud.backend.util;
+package com.minicloud.common.util;
 
 public class CIDRCalculator {
     
