@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import com.minicloud.common.dto.DashboardMetricsDTO;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -412,7 +411,7 @@ public class MiniCloudFxApp extends Application {
         cf.getChildren().addAll(new TreeItem<>("Stacks"));
 
         TreeItem<String> security = new TreeItem<>("\uD83D\uDEE1 Security");
-        security.getChildren().addAll(new TreeItem<>("GuardDuty Findings"), new TreeItem<>("WAF Rules"), new TreeItem<>("IAM Groups"));
+        security.getChildren().addAll(new TreeItem<>("GuardDuty Findings"), new TreeItem<>("WAF Rules"), new TreeItem<>("IAM Groups"), new TreeItem<>("IAM Users"));
 
         TreeItem<String> billing = new TreeItem<>("\uD83D\uDCB0 Billing");
         billing.getChildren().addAll(new TreeItem<>("Cost Explorer"));
@@ -556,6 +555,7 @@ public class MiniCloudFxApp extends Application {
             
             case "IAM":
             case "IAM Groups": setupIamGroupsView(actions, container, refreshBtn); break;
+            case "IAM Users": setupUsersView(actions, container, refreshBtn); break;
             
             case "Billing":
             case "Cost Explorer": setupBillingView(actions, container, refreshBtn); break;
@@ -1782,73 +1782,6 @@ public class MiniCloudFxApp extends Application {
         dialog.show();
     }
 
-    private void showDetailsDialog(String selectedItem) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Instance Details - MiniCloud Simulation");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        applyStyles(dialog.getDialogPane().getScene());
-        
-        VBox box = new VBox(10);
-        box.setPadding(new Insets(20));
-        box.setMinWidth(450);
-        box.getStyleClass().add("card");
-
-        Label header = new Label("Resource Details");
-        header.setFont(Font.font("Outfit", FontWeight.BOLD, 18));
-        header.setTextFill(Color.web("#818cf8"));
-
-        GridPane grid = new GridPane();
-        grid.setHgap(20); grid.setVgap(10);
-
-        String[] sparts = selectedItem.split(" \\| ");
-
-        if (selectedItem.contains("ID: ")) {
-            String namePart = selectedItem.split(" [\\(\\[|]")[0];
-            String id = selectedItem.split("ID: ")[1];
-            header.setText("Resource: " + namePart);
-            
-            addGridRow(grid, 0, "Resource ID:", id);
-            addGridRow(grid, 1, "Status:", "Running");
-            addGridRow(grid, 2, "Type:", currentTab);
-            
-            if ("Compute".equals(currentTab)) {
-                String region = selectedItem.split("\\| ")[1];
-                addGridRow(grid, 3, "Region:", region);
-                addGridRow(grid, 4, "Instance Type:", selectedItem.contains("(") ? selectedItem.split("\\(")[1].split("\\)")[0] : "t2.micro");
-            } else if ("Database".equals(currentTab)) {
-                addGridRow(grid, 3, "Engine:", selectedItem.contains("[") ? selectedItem.split("\\[")[1].split("\\]")[0] : "mysql");
-                addGridRow(grid, 4, "Class:", selectedItem.split("\\| ")[1]);
-            }
-        } else if ("Storage".equals(currentTab)) {
-            header.setText("S3 Bucket: " + sparts[0]);
-            addGridRow(grid, 0, "Region:", sparts[1]);
-            addGridRow(grid, 1, "Access:", sparts[2]);
-            addGridRow(grid, 2, "ARN:", "arn:MiniCloud:s3:::" + sparts[0]);
-        }
-
-        box.getChildren().addAll(header, new Separator(), grid);
-        
-        if ("Compute".equals(currentTab) || "Storage".equals(currentTab)) {
-            Button openBtn = new Button("\uD83C\uDF10 Open Website");
-            styleActionBtn(openBtn, true);
-            openBtn.setMaxWidth(Double.MAX_VALUE);
-            openBtn.setOnAction(e -> {
-                String url = "";
-                if ("Compute".equals(currentTab)) {
-                    // Try to find the host port from the grid or selected item
-                    String port = selectedItem.contains("Port: ") ? selectedItem.split("Port: ")[1].split("\\|")[0].trim() : "8081";
-                    url = "http://localhost:" + port;
-                } else {
-                    url = API_BASE + "/buckets/public/" + sparts[0] + "/index.html";
-                }
-                getHostServices().showDocument(url);
-            });
-            box.getChildren().add(openBtn);
-        }
-
-        dialog.getDialogPane().setContent(box);
-        dialog.showAndWait();
-    }
 
     private void showServicesMenu(Node owner) {
         ContextMenu menu = new ContextMenu();
