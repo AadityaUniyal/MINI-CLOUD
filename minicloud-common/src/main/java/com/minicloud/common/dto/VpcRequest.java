@@ -13,4 +13,5 @@ public class VpcRequest {
     private String cidrBlock;
     private String name;
     private boolean enableDnsSupport;
+    private boolean enableDnsHostnames;
 }

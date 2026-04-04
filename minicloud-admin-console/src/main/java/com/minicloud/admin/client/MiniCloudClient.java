@@ -53,11 +53,21 @@ public class MiniCloudClient {
     }
 
     public List<DynamoItemDto> getDynamoItems(String tableName) {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/database/dynamo/items?table=" + tableName,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<DynamoItemDto>>() {}
+        ).getBody();
     }
 
     public List<DatabaseDto> getDatabases() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/database/instances",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<DatabaseDto>>() {}
+        ).getBody();
     }
 
     public void stopDatabase(Long id) {
@@ -79,7 +89,12 @@ public class MiniCloudClient {
     }
 
     public List<FileDto> getFiles(String bucket) {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/storage/files?bucket=" + bucket,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<FileDto>>() {}
+        ).getBody();
     }
 
     public void uploadFile(String bucket, String name) {
@@ -92,15 +107,30 @@ public class MiniCloudClient {
 
     // --- Networking (VPC, Subnet, SecurityGroups, ELB) ---
     public List<VpcDto> getVpcs() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/networking/vpcs",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<VpcDto>>() {}
+        ).getBody();
     }
 
     public List<SubnetDto> getSubnets() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/networking/subnets",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<SubnetDto>>() {}
+        ).getBody();
     }
 
     public List<SecurityGroupDto> getSecurityGroups() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/networking/security-groups",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<SecurityGroupDto>>() {}
+        ).getBody();
     }
 
     public void deleteSecurityGroup(Long id) {
@@ -108,24 +138,49 @@ public class MiniCloudClient {
     }
 
     public List<LoadBalancerDto> getLoadBalancers() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/networking/load-balancers",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<LoadBalancerDto>>() {}
+        ).getBody();
     }
 
     // --- IAM ---
     public List<IamDto> getIamUsers() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/iam/users",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<IamDto>>() {}
+        ).getBody();
     }
 
     public List<IamGroupDto> getIamGroups() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/iam/groups",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<IamGroupDto>>() {}
+        ).getBody();
     }
 
     public List<IamRoleDto> getIamRoles() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/iam/roles",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<IamRoleDto>>() {}
+        ).getBody();
     }
 
     public List<IamPolicyDto> getIamPolicies() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/iam/policies",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<IamPolicyDto>>() {}
+        ).getBody();
     }
 
     // --- Advanced (Lambda, MQ, CloudTrail, Monitoring, Backup) ---
@@ -145,7 +200,12 @@ public class MiniCloudClient {
     }
 
     public List<LambdaDto> getLambdas() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/compute/lambdas",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<LambdaDto>>() {}
+        ).getBody();
     }
 
     public String invokeFunction(String functionName, String payload) {
@@ -153,15 +213,30 @@ public class MiniCloudClient {
     }
 
     public List<AuditLogDto> getAuditLogs() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/audit/logs",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<AuditLogDto>>() {}
+        ).getBody();
     }
 
     public List<QueueDto> getQueues() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/messaging/queues",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<QueueDto>>() {}
+        ).getBody();
     }
 
     public List<TopicDto> getTopics() {
-        return List.of();
+        return restTemplate.exchange(
+                GATEWAY_URL + "/messaging/topics",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TopicDto>>() {}
+        ).getBody();
     }
 
     public void sendMessage(String queue, String body) {

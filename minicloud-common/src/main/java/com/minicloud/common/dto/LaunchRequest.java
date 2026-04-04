@@ -14,4 +14,8 @@ public class LaunchRequest {
     private String imageId;
     private String keyName;
     private int count;
+    private String instanceName;
+    private String vpcId;
+    private String subnetId;
+    private String amiId;
 }

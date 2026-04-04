@@ -13,4 +13,6 @@ public class CreateVolumeRequest {
     private String name;
     private int sizeGb;
     private String instanceId;
+    private String availabilityZone;
+    private String volumeType;
 }

@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import com.minicloud.backend.repository.ComputeInstanceRepository;
 import com.minicloud.backend.repository.DatabaseInstanceRepository;
-import org.springframework.scheduling.annotation.Scheduled;
 
 @Service
 public class BillingService {

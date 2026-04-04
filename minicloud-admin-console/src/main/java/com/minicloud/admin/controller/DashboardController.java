@@ -69,4 +69,9 @@ public class DashboardController {
             }
         }).start();
     }
+
+    @FXML
+    private void handleOpenDiagnostics() {
+        com.minicloud.admin.swing.SystemHealthMonitor.showMonitor();
+    }
 }

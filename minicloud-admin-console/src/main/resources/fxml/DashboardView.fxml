@@ -52,6 +52,7 @@
                     <Label fx:id="apiStatusLabel" text="ONLINE" styleClass="status-pill, status-running"/>
                 </HBox>
                 <Label text="Region: us-east-1 (N. Virginia)" style="-fx-text-fill: #64748b;"/>
+                <javafx.scene.control.Button text="Open System Diagnostics (Swing)" onAction="#handleOpenDiagnostics" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 8 15; -fx-background-radius: 5; -fx-cursor: hand;"/>
             </VBox>
             
             <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: rgba(255,255,255,0.02); -fx-padding: 15; -fx-background-radius: 8;">

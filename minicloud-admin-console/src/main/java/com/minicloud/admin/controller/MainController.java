@@ -1,6 +1,9 @@
 package com.minicloud.admin.controller;
 
 import com.minicloud.admin.client.MiniCloudClient;
+import com.minicloud.admin.controller.BucketExplorerController;
+import com.minicloud.admin.controller.DynamoExplorerController;
+import com.minicloud.admin.controller.InvokeLambdaController;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -164,6 +167,27 @@ public class MainController {
     @FXML
     public void showIam() {
         loadView("/fxml/IamDeepView.fxml");
+    }
+
+    @FXML
+    public void onDashboardClick() { showDashboard(); }
+
+    @FXML
+    public void onInstancesClick() { showEc2(); }
+
+    @FXML
+    public void onStorageClick() { showS3(); }
+
+    @FXML
+    public void onDatabasesClick() { showRds(); }
+
+    @FXML
+    public void onIamClick() { showIam(); }
+
+    @FXML
+    public void onLogoutClick() {
+        System.out.println("Logging out...");
+        // Logic to return to login screen
     }
 
     public void showDynamoExplorer(String tableName) {

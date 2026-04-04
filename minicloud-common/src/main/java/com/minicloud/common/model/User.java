@@ -23,6 +23,11 @@ public class User {
 
     private String email;
     private String passwordHash;
-    private String role; // "ADMIN", "USER"
+    private String role;  // "ADMIN", "USER"
     private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+    }
 }

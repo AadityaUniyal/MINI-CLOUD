@@ -5,63 +5,62 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.minicloud.admin.controller.MainController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.minicloud.admin.controller.MainController" stylesheets="@../css/index.css">
     <left>
-        <VBox spacing="10" styleClass="sidebar">
+        <VBox spacing="10" styleClass="sidebar" prefWidth="250">
             <padding>
-                <Insets top="20" right="10" bottom="20" left="10"/>
+                <Insets top="30" right="15" bottom="30" left="15"/>
             </padding>
-            <Label text="MINICLOUD" styleClass="logo"/>
-            <Separator/>
-            <Button text="Dashboard" onAction="#onDashboardClick" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Instances" onAction="#onInstancesClick" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Storage" onAction="#onStorageClick" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Databases" onAction="#onDatabasesClick" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Monitoring" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Billing" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Region VBox.vgrow="ALWAYS" />
-            <Button text="Settings" maxWidth="Infinity" styleClass="nav-btn"/>
-            <Button text="Logout" onAction="#onLogoutClick" maxWidth="Infinity" styleClass="nav-btn, logout-btn"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="MINICLOUD" styleClass="logo-text"/>
+                <Label text="PRO" styleClass="badge-premium"/>
+            </HBox>
+            <Separator style="-fx-opacity: 0.1;"/>
+            
+            <VBox spacing="5" VBox.vgrow="ALWAYS">
+                <Button text="Dashboard" onAction="#onDashboardClick" maxWidth="Infinity" styleClass="nav-btn, active-nav">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-view-dashboard" iconSize="18"/></graphic>
+                </Button>
+                <Button text="EC2 Instances" onAction="#onInstancesClick" maxWidth="Infinity" styleClass="nav-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-server" iconSize="18"/></graphic>
+                </Button>
+                <Button text="S3 Storage" onAction="#onStorageClick" maxWidth="Infinity" styleClass="nav-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-folder" iconSize="18"/></graphic>
+                </Button>
+                <Button text="RDS Databases" onAction="#onDatabasesClick" maxWidth="Infinity" styleClass="nav-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-database" iconSize="18"/></graphic>
+                </Button>
+                <Button text="IAM Management" onAction="#onIamClick" maxWidth="Infinity" styleClass="nav-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-shield-account" iconSize="18"/></graphic>
+                </Button>
+            </VBox>
+            
+            <Separator style="-fx-opacity: 0.1;"/>
+            <Button text="Sign Out" onAction="#onLogoutClick" maxWidth="Infinity" styleClass="nav-btn, logout-btn">
+                <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-logout" iconSize="18"/></graphic>
+            </Button>
         </VBox>
     </left>
     
     <center>
-        <VBox spacing="20" styleClass="content-area">
-            <padding>
-                <Insets top="30" right="30" bottom="30" left="30"/>
-            </padding>
-            <HBox alignment="CENTER_LEFT" spacing="20">
-                <Text text="Dashboard Overview" styleClass="header-text"/>
-                <Region HBox.hgrow="ALWAYS" />
-                <Button text="Refresh data" />
+        <VBox>
+            <HBox spacing="20" alignment="CENTER_LEFT" styleClass="top-bar">
+                <padding><Insets left="30" right="30"/></padding>
+                <TextField fx:id="searchField" placeholder="Search resources, docs..." prefWidth="350" styleClass="search-field"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ChoiceBox fx:id="regionSwitcher" prefWidth="150" styleClass="region-switcher"/>
+                <Button styleClass="icon-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-bell-outline" iconSize="20"/></graphic>
+                </Button>
+                <Button styleClass="profile-btn">
+                    <graphic><org.kordamp.ikonli.javafx.FontIcon iconLiteral="mdz-account-circle" iconSize="28"/></graphic>
+                </Button>
             </HBox>
             
-            <FlowPane hgap="20" vgap="20">
-                <VBox styleClass="stat-card">
-                    <Label text="Total Instances" />
-                    <Label text="42" styleClass="stat-value" />
-                    <Label text="+5% from last month" styleClass="stat-trend" />
-                </VBox>
-                <VBox styleClass="stat-card">
-                    <Label text="Active Buckets" />
-                    <Label text="12" styleClass="stat-value" />
-                </VBox>
-                <VBox styleClass="stat-card">
-                    <Label text="Today's Cost" />
-                    <Label text="$156.24" styleClass="stat-value" />
-                    <Label text="Normal usage" styleClass="stat-trend" />
-                </VBox>
-            </FlowPane>
-            
-            <TableView fx:id="instanceTable" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="100"/>
-                    <TableColumn fx:id="colName" text="Name" prefWidth="200"/>
-                    <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
-                    <TableColumn fx:id="colType" text="Type" prefWidth="120"/>
-                    <TableColumn fx:id="colIp" text="IP Address" prefWidth="150"/>
-                </columns>
-            </TableView>
+            <StackPane fx:id="contentPane" VBox.vgrow="ALWAYS" styleClass="main-content-stack">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <!-- Dynamic views loaded here -->
+            </StackPane>
         </VBox>
     </center>
 </BorderPane>

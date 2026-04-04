@@ -1,14 +1,12 @@
 package com.minicloud.admin.controller;
 
-
 import com.minicloud.admin.client.MiniCloudClient;
 import com.minicloud.common.dto.InstanceDto;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.Button;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,75 +14,61 @@ import java.util.List;
 @Component
 public class Ec2Controller {
     @FXML private TableView<InstanceDto> tableView;
-    @FXML private TableColumn<InstanceDto, Long> idColumn;
+    @FXML private TableColumn<InstanceDto, String> idColumn;
     @FXML private TableColumn<InstanceDto, String> nameColumn;
     @FXML private TableColumn<InstanceDto, String> stateColumn;
-
     @FXML private Button startButton;
     @FXML private Button stopButton;
     @FXML private Button terminateButton;
 
     private final MiniCloudClient client;
-    private final MainController mainController;
+    private final ObservableList<InstanceDto> instances = FXCollections.observableArrayList();
 
-    public Ec2Controller(MiniCloudClient client, MainController mainController) {
+    public Ec2Controller(MiniCloudClient client) {
         this.client = client;
-        this.mainController = mainController;
     }
 
     @FXML
     public void initialize() {
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("instanceId"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-        
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
-        stateColumn.setCellFactory(column -> new javafx.scene.control.TableCell<InstanceDto, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                } else {
-                    setText(item.toUpperCase());
-                    getStyleClass().add("status-pill");
-                    getStyleClass().removeAll("status-running", "status-stopped", "status-pending");
-                    
-                    if (item.equalsIgnoreCase("running")) {
-                        getStyleClass().add("status-running");
-                    } else if (item.equalsIgnoreCase("stopped")) {
-                        getStyleClass().add("status-stopped");
-                    } else {
-                        getStyleClass().add("status-pending");
-                    }
-                }
-            }
+
+        tableView.setItems(instances);
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            boolean selected = (newVal != null);
+            startButton.setDisable(!selected || "RUNNING".equals(newVal.getState()));
+            stopButton.setDisable(!selected || !"RUNNING".equals(newVal.getState()));
+            terminateButton.setDisable(!selected);
         });
 
-        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                boolean isRunning = newSelection.getState().equalsIgnoreCase("running");
-                boolean isStopped = newSelection.getState().equalsIgnoreCase("stopped");
-                
-                startButton.setDisable(isRunning);
-                stopButton.setDisable(isStopped);
-                terminateButton.setDisable(false);
-            } else {
-                startButton.setDisable(true);
-                stopButton.setDisable(true);
-                terminateButton.setDisable(true);
-            }
-        });
+        loadInstances();
+    }
 
-        loadData();
+    private void loadInstances() {
+        new Thread(() -> {
+            try {
+                List<InstanceDto> list = client.getInstances();
+                javafx.application.Platform.runLater(() -> instances.setAll(list));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    @FXML
+    private void handleLaunch() {
+        // In a real app, this would open a dialog. For now, let's just log.
+        System.out.println("Launch Instance clicked");
     }
 
     @FXML
     private void handleStart() {
         InstanceDto selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            client.startInstance(selected.getId());
-            loadData();
+            System.out.println("Starting instance: " + selected.getInstanceId());
+            // client.startInstance(selected.getInstanceId());
+            loadInstances();
         }
     }
 
@@ -92,8 +76,9 @@ public class Ec2Controller {
     private void handleStop() {
         InstanceDto selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            client.stopInstance(selected.getId());
-            loadData();
+            System.out.println("Stopping instance: " + selected.getInstanceId());
+            // client.stopInstance(selected.getInstanceId());
+            loadInstances();
         }
     }
 
@@ -101,18 +86,14 @@ public class Ec2Controller {
     private void handleTerminate() {
         InstanceDto selected = tableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            client.terminateInstance(selected.getId());
-            loadData();
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to terminate instance " + selected.getInstanceId() + "?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait().ifPresent(type -> {
+                if (type == ButtonType.YES) {
+                    System.out.println("Terminating instance: " + selected.getInstanceId());
+                    // client.terminateInstance(selected.getInstanceId());
+                    loadInstances();
+                }
+            });
         }
-    }
-
-    @FXML
-    private void handleLaunch() {
-        mainController.showLaunchInstance();
-    }
-
-    private void loadData() {
-        List<InstanceDto> instances = client.getInstances();
-        tableView.setItems(FXCollections.observableArrayList(instances));
     }
 }

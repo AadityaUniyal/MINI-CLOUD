@@ -1,7 +1,7 @@
 package com.minicloud.backend.service;
 
-// Revised to use the local model
-import com.minicloud.backend.model.StatsResponse;
+// Revised to use the common DTO
+import com.minicloud.common.dto.StatsResponse;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
@@ -30,10 +30,9 @@ public class StatsService {
 
         return StatsResponse.builder()
                 .containerId(containerId)
-                .cpuUsage(cpuUsage)
-                .memoryUsage(stats.getMemoryStats().getUsage())
-                .memoryLimit(stats.getMemoryStats().getLimit())
-                .status("ACTIVE")
+                .cpuPercent(cpuUsage)
+                .memoryUsageBytes(stats.getMemoryStats().getUsage())
+                .memoryLimitBytes(stats.getMemoryStats().getLimit())
                 .build();
     }
 

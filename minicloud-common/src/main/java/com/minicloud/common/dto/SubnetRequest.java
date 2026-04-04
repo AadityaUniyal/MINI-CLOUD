@@ -14,4 +14,5 @@ public class SubnetRequest {
     private String cidrBlock;
     private String availabilityZone;
     private String name;
+    private boolean mapPublicIpOnLaunch;
 }

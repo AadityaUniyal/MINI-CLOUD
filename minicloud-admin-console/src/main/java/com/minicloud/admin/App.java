@@ -1,5 +1,6 @@
 package com.minicloud.admin;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -10,12 +11,23 @@ import org.springframework.context.ConfigurableApplicationContext;
 import atlantafx.base.theme.PrimerDark;
 import com.minicloud.admin.MiniCloudApplication;
 
+import javax.swing.UIManager;
+
 public class App extends Application {
     private ConfigurableApplicationContext springContext;
 
     @Override
     public void init() throws Exception {
+        // Apply JavaFX Theme
         Application.setUserAgentStylesheet(new PrimerDark().getUserAgentStylesheet());
+        
+        // Apply Swing Theme (FlatLaf)
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception e) {
+            System.err.println("Failed to initialize FlatLaf");
+        }
+
         springContext = new SpringApplicationBuilder(MiniCloudApplication.class).run();
     }
 

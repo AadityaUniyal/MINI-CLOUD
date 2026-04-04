@@ -27,8 +27,6 @@
         <module>minicloud-loadbalancer</module>
         <module>minicloud-monitoring</module>
         <module>minicloud-billing</module>
-        <module>minicloud-billing</module>
-        <module>minicloud-notification</module>
         <module>minicloud-notification</module>
     </modules>
 
@@ -37,6 +35,8 @@
         <javafx.version>21.0.2</javafx.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <vaadin.version>24.3.5</vaadin.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <lombok.version>1.18.34</lombok.version>
     </properties>
 
     <dependencyManagement>
@@ -88,6 +88,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -95,7 +96,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.30</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

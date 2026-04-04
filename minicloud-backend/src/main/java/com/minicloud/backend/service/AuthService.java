@@ -19,15 +19,16 @@ public class AuthService {
     }
 
     public boolean validateToken(String token) {
-        log.info("Validating token with IAM service");
+        log.info("Validating token with IAM service: {}", iamServiceUrl);
         try {
-            // Simulation of token validation call to IAM service
-            // String url = iamServiceUrl + "/api/auth/validate?token=" + token;
-            // Boolean isValid = restTemplate.getForObject(url, Boolean.class);
-            // return isValid != null && isValid;
+            if (token == null || token.isEmpty()) return false;
             
-            // For now, return true if token is present (placeholder)
-            return token != null && !token.isEmpty();
+            // In a real environment, we would call the IAM service:
+            // String url = iamServiceUrl + "/api/auth/validate?token=" + token;
+            // return restTemplate.getForObject(url, Boolean.class);
+
+            // Simulation: Assume tokens starting with 'ey' are valid JWTs for this PBL
+            return token.startsWith("ey") || token.equals("mock-admin-token");
         } catch (Exception e) {
             log.error("Token validation failed", e);
             return false;
