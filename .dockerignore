@@ -1,0 +1,34 @@
+# Build artifacts
+**/target/
+**/*.jar
+**/*.war
+**/*.ear
+
+# IDE and System files
+.mvn/
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.DS_Store
+Thumbs.db
+
+# Large Project files not needed for container build
+jdk21.zip
+set_jdk21.bat
+*.log
+*.txt
+!MINI-CLOUD_Troubleshooting_Guide.txt
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Maven wrapper (using host maven or maven image is usually better)
+mvnw
+mvnw.cmd

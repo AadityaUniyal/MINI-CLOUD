@@ -94,8 +94,9 @@ public class OrchestrationService {
         return DeployStackResponse.builder()
                 .stackId(stackId)
                 .status("DEPLOYED")
-                .loadBalancerUrl("http://localhost:" + lb.getPublicPort())
-                .message("Stack " + request.getStackName() + " deployed successfully with " + request.getInstanceCount() + " instances.")
+                .loadBalancerEndpoint("http://localhost:" + lb.getPublicPort())
+                .instanceIds(instanceIds.stream().map(String::valueOf).toList())
+                .databaseEndpoint(db.getName() + ":3306")
                 .build();
     }
 

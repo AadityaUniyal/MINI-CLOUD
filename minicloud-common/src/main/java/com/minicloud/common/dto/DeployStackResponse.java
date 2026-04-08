@@ -15,4 +15,5 @@ public class DeployStackResponse {
     private String status;
     private List<String> instanceIds;
     private String loadBalancerEndpoint;
+    private String databaseEndpoint;
 }

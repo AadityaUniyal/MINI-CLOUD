@@ -17,7 +17,8 @@ public class ComputeService {
     private final BillingService billingService;
     private final AuditLogRepository auditLogRepository;
     private final VolumeService volumeService;
-    private static int NEXT_PORT = 8081;
+    private static final java.util.concurrent.atomic.AtomicInteger NEXT_PORT =
+            new java.util.concurrent.atomic.AtomicInteger(8100);
 
     public ComputeService(DockerService dockerService, 
                           ComputeInstanceRepository computeInstanceRepository,
@@ -34,19 +35,16 @@ public class ComputeService {
 
     private void initializeNextPort() {
         computeInstanceRepository.findAll().stream()
-                .mapToInt(inst -> inst.getHostPort() != null ? inst.getHostPort() : 8080)
+                .mapToInt(inst -> inst.getHostPort() != null ? inst.getHostPort() : 8099)
                 .max()
-                .ifPresent(maxPort -> NEXT_PORT = maxPort + 1);
+                .ifPresent(maxPort -> NEXT_PORT.set(maxPort + 1));
     }
 
     /**
      * Week 1 Core: Launch a container and track it in H2.
      */
     public ComputeInstance launchInstance(String owner, String name, String vpcId, String subnetId, String amiId) {
-        int hostPort;
-        synchronized (this) {
-            hostPort = NEXT_PORT++;
-        }
+        int hostPort = NEXT_PORT.getAndIncrement();
         String containerId = dockerService.launchTomcatContainer(name, hostPort);
         
         String region = "us-east-1";

@@ -1,10 +1,11 @@
 package com.minicloud.admin;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.minicloud.admin", "com.minicloud.common"})
 public class MiniCloudApplication {
-    // This is the Spring Boot entry point for the Admin Console
+    public static void main(String[] args) {
+        // This is usually started via JavaFX App class, 
+        // but needs to exist as a Spring configuration source.
+    }
 }

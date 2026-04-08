@@ -36,9 +36,10 @@ public class BillingService {
     }
 
     /**
-     * Mock Hourly billing generation
+     * On-demand billing snapshot — call manually or via admin API.
+     * NOTE: @Scheduled removed to prevent double-billing with BillingScheduler
+     * which already runs deductOngoingCosts() every minute.
      */
-    @Scheduled(fixedRate = 3600000) // Every hour
     public void generateBillingRecords() {
         System.out.println("Generating hourly billing records...");
         

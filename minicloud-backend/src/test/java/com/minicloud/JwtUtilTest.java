@@ -1,6 +1,6 @@
 package com.minicloud;
 
-import com.minicloud.security.JwtUtil;
+import com.minicloud.common.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;

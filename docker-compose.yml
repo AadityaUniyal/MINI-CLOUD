@@ -1,5 +1,5 @@
 services:
-  # Relational Database (PostgreSQL for Metadata)
+  # Relational Database (PostgreSQL — used by ALL microservices)
   postgres-db:
     image: postgres:14-alpine
     container_name: minicloud-postgres
@@ -13,53 +13,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres -d minicloud"]
       interval: 5s
       timeout: 5s
-      retries: 5
-    restart: always
-
-  # Relational Database (MySQL for Billing/IAM)
-  mysql-db:
-    image: mysql:8.0
-    container_name: minicloud-mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_DATABASE=minicloud_iam
-      - MYSQL_USER=minicloud
-      - MYSQL_PASSWORD=password
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
-  # NoSQL Database (MongoDB for Logs & Analytics)
-  mongodb:
-    image: mongo:latest
-    container_name: minicloud-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
-  # Caching (Redis)
-  redis:
-    image: redis:alpine
-    container_name: minicloud-redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      retries: 10
     restart: always
 
   # Object Storage (MinIO)
@@ -113,8 +67,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 45s
     restart: on-failure
 
   # IAM Service
@@ -129,7 +83,10 @@ services:
       - "8081:8081"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -139,8 +96,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 120s
     restart: on-failure
 
   # API Gateway
@@ -155,6 +112,7 @@ services:
       - "8080:8080"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -164,8 +122,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 45s
     restart: on-failure
 
   # Backend Service (Core Logic)
@@ -180,7 +138,11 @@ services:
       - "8082:8082"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MINICLOUD_IAM_URL=http://iam-service:8081
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -190,8 +152,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 120s
     restart: on-failure
 
   # Compute Service
@@ -206,7 +168,16 @@ services:
       - "8083:8083"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+      # Docker-in-Docker: point to the host daemon
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    volumes:
+      # Windows: use npipe; Linux/Mac: use the unix socket below
+      # Linux/Mac: - /var/run/docker.sock:/var/run/docker.sock
+      - //./pipe/docker_engine://./pipe/docker_engine
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -216,8 +187,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 120s
     restart: on-failure
 
   # Database Management Service
@@ -231,16 +202,22 @@ services:
     ports:
       - "8085:8085"
     environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
+      postgres-db:
+        condition: service_healthy
       eureka-server:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 45s
     restart: on-failure
 
   # Monitoring Service
@@ -256,6 +233,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -265,8 +245,8 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 45s
     restart: on-failure
 
   # Billing Service
@@ -282,6 +262,9 @@ services:
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - JWT_SECRET=${JWT_SECRET}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -291,8 +274,121 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 45s
+    restart: on-failure
+
+  # Storage Service (Object Storage via MinIO)
+  storage-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-storage
+    container_name: minicloud-storage
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MINIO_ENDPOINT=http://minio:9000
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    restart: on-failure
+
+  # Load Balancer Service
+  loadbalancer-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-loadbalancer
+    container_name: minicloud-loadbalancer
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/minicloud
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    restart: on-failure
+
+  # Notification Service (Email/Alerts)
+  notification-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-notification
+    container_name: minicloud-notification
+    ports:
+      - "8088:8088"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MAIL_USERNAME=${MAIL_USERNAME:-your-email@gmail.com}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-your-app-password}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    restart: on-failure
+
+  # Portal Service (User-facing)
+  portal-service:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile.multi
+      args:
+        APP_MODULE: minicloud-portal
+    container_name: minicloud-portal
+    ports:
+      - "8089:8089"
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - MINICLOUD_GATEWAY_URL=http://api-gateway:8080
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
     restart: on-failure
 
 networks:
@@ -300,5 +396,4 @@ networks:
     name: minicloud-network
 
 volumes:
-  mongodb_data:
   minio_data:

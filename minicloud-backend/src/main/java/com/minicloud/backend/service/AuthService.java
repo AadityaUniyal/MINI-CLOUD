@@ -1,37 +1,21 @@
 package com.minicloud.backend.service;
 
+import com.minicloud.backend.model.User;
+import com.minicloud.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    private final RestTemplate restTemplate;
+    private final UserRepository userRepository;
 
-    @Value("${minicloud.iam.url:http://iam-service:8081}")
-    private String iamServiceUrl;
-
-    public AuthService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
-    public boolean validateToken(String token) {
-        log.info("Validating token with IAM service: {}", iamServiceUrl);
-        try {
-            if (token == null || token.isEmpty()) return false;
-            
-            // In a real environment, we would call the IAM service:
-            // String url = iamServiceUrl + "/api/auth/validate?token=" + token;
-            // return restTemplate.getForObject(url, Boolean.class);
-
-            // Simulation: Assume tokens starting with 'ey' are valid JWTs for this PBL
-            return token.startsWith("ey") || token.equals("mock-admin-token");
-        } catch (Exception e) {
-            log.error("Token validation failed", e);
-            return false;
-        }
+    public User getCurrentUser() {
+        String username = SecurityContextHolder.getContext()
+            .getAuthentication().getName();
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
 }

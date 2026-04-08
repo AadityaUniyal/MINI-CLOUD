@@ -11,7 +11,7 @@ public class DynamoTable {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String name;
+    private String tableName;
 
     private String partitionKey;
     private String sortKey;
@@ -24,8 +24,8 @@ public class DynamoTable {
     public DynamoTable() {}
 
     public Long getId() { return id; }
-    public String getName() { return name; }
-    public void setName(String v) { this.name = v; }
+    public String getTableName() { return tableName; }
+    public void setTableName(String v) { this.tableName = v; }
     public String getPartitionKey() { return partitionKey; }
     public void setPartitionKey(String v) { this.partitionKey = v; }
     public String getSortKey() { return sortKey; }
@@ -45,8 +45,8 @@ public class DynamoTable {
 
     public static class DynamoTableBuilder {
         private final DynamoTable t = new DynamoTable();
-        public DynamoTableBuilder name(String val) { t.name = val; return this; }
-        public DynamoTableBuilder tableName(String val) { t.name = val; return this; }
+        public DynamoTableBuilder name(String val) { t.tableName = val; return this; }
+        public DynamoTableBuilder tableName(String val) { t.tableName = val; return this; }
         public DynamoTableBuilder partitionKey(String val) { t.partitionKey = val; return this; }
         public DynamoTableBuilder sortKey(String val) { t.sortKey = val; return this; }
         public DynamoTableBuilder status(String val) { t.status = val; return this; }

@@ -51,6 +51,8 @@ public class LambdaFunction {
     public void setCreatedAt(LocalDateTime v) { this.createdAt = v; }
     public LocalDateTime getLastModified() { return lastModified; }
     public void setLastModified(LocalDateTime v) { this.lastModified = v; }
+    public String getCode() { return codeBlob; }
+    public void setCode(String v) { this.codeBlob = v; }
 
     public static Builder builder() { return new Builder(); }
 

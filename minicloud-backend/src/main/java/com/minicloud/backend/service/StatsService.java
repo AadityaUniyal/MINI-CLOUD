@@ -19,7 +19,6 @@ public class StatsService {
         if (stats == null) {
             return StatsResponse.builder()
                     .containerId(containerId)
-                    .status("ERROR")
                     .build();
         }
 
@@ -30,8 +29,8 @@ public class StatsService {
 
         return StatsResponse.builder()
                 .containerId(containerId)
-                .cpuPercent(cpuUsage)
-                .memoryUsageBytes(stats.getMemoryStats().getUsage())
+                .cpuUsagePercent(cpuUsage)
+                .memoryUsedBytes(stats.getMemoryStats().getUsage())
                 .memoryLimitBytes(stats.getMemoryStats().getLimit())
                 .build();
     }

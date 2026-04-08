@@ -1,0 +1,141 @@
+/* MiniCloud Premium Theme - AWS Console Style */
+
+:root {
+    --aws-bg: #232f3e;
+    --aws-nav-bg: #19222d;
+    --aws-orange: #FF9900;
+    --aws-orange-hover: #EC7211;
+    --aws-blue: #0073BB;
+    --aws-text-main: #ffffff;
+    --aws-text-sub: #aab7c4;
+    --aws-body-bg: #f2f3f3;
+    --aws-card-bg: #ffffff;
+    --aws-border: #eaeded;
+}
+
+[theme~="dark"] {
+    --aws-body-bg: #0f172a;
+    --aws-card-bg: #1e293b;
+    --aws-border: #334155;
+    --aws-text-main: #f8fafc;
+    --aws-text-sub: #94a3b8;
+}
+
+html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--aws-body-bg);
+    margin: 0;
+}
+
+/* Header / Navbar Styling */
+.minicloud-header {
+    background-color: var(--aws-bg) !important;
+    color: white !important;
+    padding: 0 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.minicloud-logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: white !important;
+    letter-spacing: -0.5px;
+}
+
+.minicloud-logo span {
+    color: var(--aws-orange);
+}
+
+/* Sidebar / Drawer Styling */
+vaadin-app-layout vaadin-drawer {
+    background-color: var(--aws-nav-bg) !important;
+    border-right: 1px solid var(--aws-border);
+}
+
+vaadin-tab {
+    color: var(--aws-text-sub) !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+vaadin-tab[selected] {
+    color: var(--aws-orange) !important;
+    background-color: rgba(255, 153, 0, 0.1);
+}
+
+vaadin-tab:hover {
+    color: white !important;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Dashboard Cards */
+.summary-card {
+    background-color: var(--aws-card-bg);
+    border: 1px solid var(--aws-border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    color: var(--aws-text-sub);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.card-value {
+    color: var(--aws-text-main);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Health Badge */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-up {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-down {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Technical Console Styling */
+.console-container {
+    background-color: #000000;
+    color: #00ff00;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    padding: 1rem;
+    border-radius: 4px;
+    min-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+
+.console-line {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+.console-timestamp {
+    color: #888;
+    margin-right: 8px;
+}

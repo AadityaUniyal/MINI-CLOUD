@@ -203,6 +203,23 @@ public class BucketService {
         return Paths.get(storageRoot, userId, bucketName, fileName);
     }
 
+    public void deleteFile(String bucketName, String fileName) {
+        deleteFile(bucketName, fileName, "system");
+    }
+
+    public void deleteFile(String bucketName, String fileName, String owner) {
+        try {
+            Path filePath = getFilePath(owner, bucketName, fileName);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+            storageFileRepository.findByFileNameAndBucketName(fileName, bucketName)
+                .ifPresent(storageFileRepository::delete);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete file: " + fileName, e);
+        }
+    }
+
     public BucketPolicy setBucketPolicy(String bucketName, String owner, String policyJson) {
         Bucket bucket = bucketRepository.findByName(bucketName)
                 .filter(b -> b.getOwner().equals(owner))

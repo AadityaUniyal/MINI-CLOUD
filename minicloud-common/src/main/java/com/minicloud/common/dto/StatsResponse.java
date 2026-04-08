@@ -12,8 +12,8 @@ import java.time.Instant;
 @AllArgsConstructor
 public class StatsResponse {
     private String containerId;
-    private double cpuPercent;
-    private long memoryUsageBytes;
+    private double cpuUsagePercent;
+    private long memoryUsedBytes;
     private long memoryLimitBytes;
     private String networkIn;
     private String networkOut;

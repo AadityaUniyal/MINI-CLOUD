@@ -39,6 +39,7 @@ public class AuthService {
                 
         User user = User.builder()
                 .username(request.getUsername())
+                .email(request.getEmail() != null ? request.getEmail() : request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(java.util.Set.of(userRole))
                 .build();
@@ -133,19 +134,27 @@ public class AuthService {
         Role userRole = roleRepository.findByName("ROLE_USER")
                 .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_USER").build()));
 
+        String accessKey = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 20).toUpperCase();
+        String secretKey = java.util.UUID.randomUUID().toString().replace("-", "");
+
         User iamUser = User.builder()
                 .username(root.getAccountId() + "/" + iamUsername)
+                .email(iamUsername + "@" + root.getAccountId() + ".minicloud.internal")
                 .iamUsername(iamUsername)
                 .accountId(root.getAccountId())
                 .isRootUser(false)
                 .password(passwordEncoder.encode(password))
                 .roles(java.util.Set.of(userRole))
                 .owner(rootUsername)
-                .balance(0.0) // IAM users share root resources or have 0 starting balance
+                .balance(0.0)
                 .status("ACTIVE")
                 .build();
-        
-        return userRepository.save(iamUser);
+
+        User saved = userRepository.save(iamUser);
+        // Attach generated keys to the returned object (visible only once to caller)
+        saved.setAccessKey(accessKey);
+        saved.setSecretKey(secretKey);
+        return saved;
     }
 
     public java.util.List<User> getIamUsersForRoot(String rootUsername) {
@@ -155,12 +164,13 @@ public class AuthService {
     }
 
     private String generateAccountId() {
-        return String.format("%012d", (long) (Math.random() * 1000000000000L));
+        // UUID-based: eliminates Math.random() collision risk
+        return java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
     }
 
-    public User getUserFromToken(String token) {
-        String username = jwtUtil.extractUsername(token);
+    /** Returns the user by username (principal.getName() — NOT a JWT string). */
+    public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
     }
 }

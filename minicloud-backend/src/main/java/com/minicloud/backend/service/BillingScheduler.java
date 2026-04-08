@@ -1,4 +1,4 @@
-package com.minicloud.backend.config;
+package com.minicloud.backend.service;
 
 import com.minicloud.backend.model.ComputeInstance;
 import com.minicloud.backend.model.DatabaseInstance;

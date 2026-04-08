@@ -16,6 +16,7 @@ COPY minicloud-loadbalancer/pom.xml minicloud-loadbalancer/
 COPY minicloud-monitoring/pom.xml minicloud-monitoring/
 COPY minicloud-billing/pom.xml minicloud-billing/
 COPY minicloud-notification/pom.xml minicloud-notification/
+COPY minicloud-portal/pom.xml minicloud-portal/
 COPY minicloud-admin-console/pom.xml minicloud-admin-console/
 
 RUN mvn dependency:go-offline -B
@@ -27,6 +28,7 @@ RUN mvn clean install -DskipTests -pl ${APP_MODULE} -am -B
 
 # Stage 2: Runtime (Slim JRE)
 FROM eclipse-temurin:21-jre-jammy
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ARG APP_MODULE
 COPY --from=build /app/${APP_MODULE}/target/*.jar app.jar

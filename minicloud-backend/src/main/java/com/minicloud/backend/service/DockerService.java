@@ -4,10 +4,9 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
-// Fully qualified Statistics used below to resolve symbol issues
 import com.github.dockerjava.core.DefaultDockerClientConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import org.slf4j.Logger;
@@ -42,9 +41,7 @@ public class DockerService {
                     .responseTimeout(Duration.ofSeconds(10))
                     .build();
 
-            this.dockerClient = DockerClientBuilder.getInstance(config)
-                    .withDockerHttpClient(httpClient)
-                    .build();
+            this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
 
             // Validate connection
             dockerClient.pingCmd().exec();
@@ -168,6 +165,14 @@ public class DockerService {
             return;
         }
         getClient().stopContainerCmd(containerId).exec();
+    }
+
+    public void startContainer(String containerId) {
+        if (containerId.startsWith("sim-")) {
+            // Simulator is already running
+            return;
+        }
+        getClient().startContainerCmd(containerId).exec();
     }
 
     public void removeContainer(String containerId) {

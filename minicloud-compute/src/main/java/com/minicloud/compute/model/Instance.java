@@ -57,6 +57,7 @@ public class Instance {
         public InstanceBuilder state(String state) { i.state = state; return this; }
         public InstanceBuilder containerId(String cid) { i.containerId = cid; return this; }
         public InstanceBuilder imageId(String iid) { i.imageId = iid; return this; }
+        public InstanceBuilder ipAddress(String ip) { i.ipAddress = ip; return this; }
         public InstanceBuilder createdAt(LocalDateTime createdAt) { i.createdAt = createdAt; return this; }
         public Instance build() {
             if (i.createdAt == null) i.createdAt = LocalDateTime.now();

@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateVolumeRequest {
     private String name;
-    private int sizeGb;
-    private String instanceId;
-    private String availabilityZone;
+    private int size;
     private String volumeType;
+    private String availabilityZone;
+    private String instanceId;
 }

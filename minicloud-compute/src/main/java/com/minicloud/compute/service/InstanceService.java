@@ -44,6 +44,10 @@ public class InstanceService {
         String instanceId = "i-" + UUID.randomUUID().toString().substring(0, 8);
         String containerId = dockerService.createInstance(image.getDockerImage(), instanceId);
 
+        // Fix #33: auto-start the container so the instance is immediately usable
+        dockerService.startInstance(containerId);
+        String ipAddress = dockerService.getIpAddress(containerId);
+
         Instance instance = Instance.builder()
                 .instanceId(instanceId)
                 .tenantId(tenantId)
@@ -51,10 +55,11 @@ public class InstanceService {
                 .type(typeName)
                 .imageId(imageId)
                 .containerId(containerId)
-                .state("STOPPED")
+                .state("RUNNING")
+                .ipAddress(ipAddress)
                 .createdAt(LocalDateTime.now())
                 .build();
-        
+
         return instanceRepository.save(instance);
     }
 
