@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * now return UserResponseDto which excludes the hashed password field.
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -34,13 +34,13 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @PostMapping("/register-aws")
-    public ResponseEntity<AuthResponse> registerAws(@RequestBody AwsRegisterRequest request) {
+    @PostMapping("/register-MiniCloud")
+    public ResponseEntity<AuthResponse> registerMiniCloud(@RequestBody AwsRegisterRequest request) {
         return ResponseEntity.ok(authService.registerAws(request));
     }
 
-    @PostMapping("/login-aws")
-    public ResponseEntity<AuthResponse> loginAws(@RequestBody AwsLoginRequest request) {
+    @PostMapping("/login-MiniCloud")
+    public ResponseEntity<AuthResponse> loginMiniCloud(@RequestBody AwsLoginRequest request) {
         return ResponseEntity.ok(authService.loginAws(request));
     }
 

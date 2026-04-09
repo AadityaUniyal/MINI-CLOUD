@@ -7,6 +7,11 @@ Write-Host "===============================================" -ForegroundColor Cy
 
 # 1. Environment Setup
 Write-Host "[1/5] Setting up environment..." -ForegroundColor Yellow
+
+# Explicitly use JDK 21 for building/running (Fixes JDK 25 mismatch)
+$ENV:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+$ENV:PATH = "$ENV:JAVA_HOME\bin;$ENV:PATH"
+
 if (Test-Path ".\setup_env.ps1") {
     . .\setup_env.ps1
 } else {
@@ -36,20 +41,37 @@ if (-not (Test-Path ".\mvnw.cmd")) {
     exit 1
 }
 
-# 4. Orchestrate Services
-Write-Host "[4/5] Orchestrating 14-module platform (Docker Compose)..." -ForegroundColor Yellow
-Write-Host "This will build and start: Eureka, IAM, Gateway, Backend, Compute, and more."
-docker-compose up -d --build
+# 4. Tiered Orchestration (Prevents Memory Surge)
+Write-Host "[4/5] Orchestrating MiniCloud Tiered Startup..." -ForegroundColor Yellow
+
+# --- Tier 1: Infrastructure ---
+Write-Host "-> Tier 1: Infrastructure (Postgres, Eureka, MinIO)..." -ForegroundColor Cyan
+docker-compose up -d --build postgres-db eureka-server minio
+Start-Sleep -Seconds 15
+
+# --- Tier 2: Identity & Access ---
+Write-Host "-> Tier 2: Identity & Security (IAM)..." -ForegroundColor Cyan
+docker-compose up -d --build iam-service
+Start-Sleep -Seconds 15
+
+# --- Tier 3: Core Application ---
+Write-Host "-> Tier 3: Gateway & Consolidated Backend..." -ForegroundColor Cyan
+docker-compose up -d --build api-gateway backend-service
+Start-Sleep -Seconds 10
+
+# --- Tier 4: Background Services (Non-blocking) ---
+Write-Host "-> Tier 4: Background Platform Services (Scaling in background)..." -ForegroundColor Gray
+docker-compose up -d --build compute-service storage-service database-service monitoring-service billing-service notification-service loadbalancer-service
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: Docker Compose orchestration failed." -ForegroundColor Red
     exit 1
 }
 
-# 5. Health Monitoring Loop
-Write-Host "[5/5] Waiting for services to reach HEALTHY state..." -ForegroundColor Yellow
-$Services = @("minicloud-eureka", "minicloud-iam", "minicloud-gateway", "minicloud-portal")
-$MaxRetries = 40
+# 5. Health Monitoring & UI Launch
+Write-Host "[5/5] Waiting for Core Tier to reach HEALTHY state..." -ForegroundColor Yellow
+$Services = @("minicloud-eureka", "minicloud-iam", "minicloud-gateway")
+$MaxRetries = 60
 $WaitInterval = 10
 
 for ($i = 1; $i -le $MaxRetries; $i++) {
@@ -80,9 +102,32 @@ for ($i = 1; $i -le $MaxRetries; $i++) {
     Start-Sleep -Seconds $WaitInterval
 }
 
+# Wait for API Gateway exposure
+Write-Host "`nWaiting for API Gateway to be reachable..." -ForegroundColor Yellow
+$Attempt = 1
+while ($Attempt -le 10) {
+    try {
+        $Response = Invoke-WebRequest -Uri "http://localhost:8080/actuator/health" -UseBasicParsing -TimeoutSec 2
+        if ($Response.StatusCode -eq 200) {
+            Write-Host "API Gateway is UP." -ForegroundColor Green
+            break
+        }
+    } catch {
+        Write-Host "Waiting for Gateway (Attempt $Attempt/10)..." -ForegroundColor Gray
+    }
+    Start-Sleep -Seconds 5
+    $Attempt++
+}
+
 # Final Launch
 Write-Host "`n===============================================" -ForegroundColor Cyan
-Write-Host "   MiniCloud is now LIVE at http://localhost:8089/login " -ForegroundColor Cyan
+Write-Host "   MiniCloud is now LIVE!                      " -ForegroundColor Cyan
+Write-Host "   Launching Desktop Management Console...    " -ForegroundColor Cyan
 Write-Host "===============================================" -ForegroundColor Cyan
 
+# Start the Web Portal in background as fallback
 Start-Process "http://localhost:8089/login"
+
+# Launch the JavaFX Admin Console (Primary Screen)
+Write-Host "Starting MiniCloud JavaFX App..." -ForegroundColor Yellow
+.\mvnw.cmd -pl minicloud-admin-console javafx:run

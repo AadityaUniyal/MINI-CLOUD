@@ -97,7 +97,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
-      start_period: 120s
+      start_period: 240s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
     restart: on-failure
 
   # API Gateway

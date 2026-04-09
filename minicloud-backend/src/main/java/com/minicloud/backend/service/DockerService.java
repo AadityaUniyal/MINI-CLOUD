@@ -31,7 +31,12 @@ public class DockerService {
 
     public DockerService() {
         try {
-            DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+            // Best configuration for Windows: Use the Named Pipe (npipe)
+            String dockerHost = "npipe:////./pipe/docker_engine";
+            
+            DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                    .withDockerHost(dockerHost)
+                    .build();
 
             DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
                     .dockerHost(config.getDockerHost())
